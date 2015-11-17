@@ -8,7 +8,7 @@ public class Harbor {
 	double latitude;
 	double depth;
 
-	public Harbor(long longitude, long latitude, double depth) {
+	public Harbor(double longitude, double latitude, double depth) {
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.depth = depth;
@@ -36,5 +36,10 @@ public class Harbor {
 
 	public void setDepth(double depth) {
 		this.depth = depth;
+	}
+
+	@Override
+	public String toString() {
+		return "" + longitude + " " + latitude + " " + depth + "\n";
 	}
 }

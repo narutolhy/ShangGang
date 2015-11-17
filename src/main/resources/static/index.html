@@ -26,16 +26,8 @@
 
 	<input name="" type="button" value="上传数据" onClick="uploadDialog()" />
 
+	<input name="" type="button" value="下载数据" onClick=" downloadDialog()" />
 
-	<form method="POST" enctype="multipart/form-data"
-		  action="/upload">
-		File to upload: <input type="file" name="file"><br /> Name: <input
-			type="text" name="name"><br /> <br /> <input type="submit"
-														 value="Upload"> Press here to upload the file!
-	</form>
-	<span class="btn btn-default btn-file">
-    Browse <input type="file">
-</span>
 
 	<form action="/deleteuser" method="post">
 		delete user
@@ -44,10 +36,12 @@
 		<input type="submit" value="Submit" />
 	</form>
 
-	<form action="/login" method="post">
+
+
+	<form action="/login" onsubmit="encrypt(this)" method="post">
 		login:
 		<p>userid: <input type="text" name="userId" /></p>
-		<p>password: <input type="text" name="password" /></p>
+		<p>password: <input type="password" name="password" /></p>
 
 		<input type="submit" value="Submit" />
 	</form>

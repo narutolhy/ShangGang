@@ -6,7 +6,9 @@ $(document).ready(function() {
 	$('input').iCheck({
 		checkboxClass: 'icheckbox_flat-green'
 	});
+
 });
+
 
 function addUserHandler(thisform) {
 	with (thisform) {
@@ -80,22 +82,22 @@ function changePasswordHandler(thisform) {
 	}
 }
 
-function uploadHandler(thisform) {
+function uploadHandler(thisform, override) {
 	with (thisform) {
 		var fileName = file.value;
 		if(fileName.match(/fakepath/)) {
 			// update the file-path text using case-insensitive regex
 			fileName = fileName.replace(/C:\\fakepath\\/i, '');
 		}
-		console.log(fileName);
 		var regexp = /^\d\d-\d\d\.txt+$/;
 		if (!regexp.test(fileName)) {
 			alert("文件名格式不正确！");
 			return;
 		}
 		var fd = new FormData(thisform);
-		fd.append("name", fileName);
-
+		fd.append("name", fileName.substr(0, 5));
+		fd.append("override", override);
+		$('#loading-indicator').show();
 
 		$.ajax({
 			url: "/upload",
@@ -104,14 +106,32 @@ function uploadHandler(thisform) {
 			enctype: 'multipart/form-data',
 			processData: false,  // tell jQuery not to process the data
 			contentType: false   // tell jQuery not to set contentType
-		}).fail(function () {
+		}).fail(function() {
+			$('#loading-indicator').hide();
 			alert("未连接到服务器!");
-		}).done(function( data ) {
-			console.log( data );
-			alert("文件上传成功！");
+		}).done(function(data) {
+			$('#loading-indicator').hide();
+			if (data == 0) {
+				var r = confirm("该时间数据已在数据库中，是否覆盖？");
+				if (r) {
+					uploadHandler(thisform, true);
+				}
+			} else if (data == 1) {
+				alert("数据上传成功！");
+			} else {
+				alert("服务器异常, 上传失败！");
+			}
 		});
 		return false;
 	}
+}
+
+function downloadHandler(thisform) {
+	var year = $('.year-form').text();
+	var month = $('.month-form').text();
+	var date = year.substr(2, 2) + "-" + month.substr(0, 2);
+	thisform.date.value = date;
+	thisform.submit();
 }
 
 function showUploadFileName() {
@@ -121,13 +141,15 @@ function showUploadFileName() {
 	});
 }
 function uploadDialog() {
+	var waitingGIF = '<img src="/img/loading.gif" id="loading-indicator" style="display:none" />';
+
 	var formHead =
 		'<form id="uploadForm">';
 
 	var formBody =
 		'<div class="row"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
 			'<input id="lefile" type="file" name="file" style="display:none">' +
-			'<input id="photoCover" type="text" class="form-control">' +
+			'<input id="photoCover" type="text" class="form-control" placeholder="文件名必须为YY-MM.txt,例如15-03.txt">' +
 			'<span class="input-group-btn">' +
 				'<button class="btn btn-default" type="button" onclick=showUploadFileName();>选择文件</button>' +
 			'</span>' +
@@ -135,7 +157,7 @@ function uploadDialog() {
 	var formTail = '</form>';
 	BootstrapDialog.show({
 		title : '上传水深数据',
-		message : formHead + formBody + formTail,
+		message : formHead + formBody + formTail + waitingGIF,
 		asynchronize: false,
 
 		onshown: function(dialog){
@@ -152,13 +174,104 @@ function uploadDialog() {
 			label : '上传',
 			cssClass : 'btn-primary',
 			action : function(dialog){
-				uploadHandler($('#uploadForm')[0]);
+				uploadHandler($('#uploadForm')[0], false);
 			}
 		}]
 	});
 }
 
+function downloadDialog() {
 
+
+	var waitingGIF = '<img src="/img/loading.gif" id="loading-indicator" style="display:none" />';
+
+	var formBody =
+		'<div class="row"><div class="col-lg-4 col-lg-offset-4"><label class="pull-right">请选择对应的时间：</label></div></div>' +
+		'<div class="row">' +
+			'<div class="col-lg-3 col-lg-offset-3"><div class="input-group-btn">' +
+				'<button type="button" class="btn btn-default dropdown-toggle year-form" name="year" data-toggle="dropdown" style="width:100%">选择年份<span class="caret"></span></button>' +
+				'<ul class="dropdown-menu dropdown-year" style="min-width: 0;width:100%"></ul>' +
+			'</div></div>' +
+			'<div class="col-lg-3" style="left:0px"><div class="input-group-btn">' +
+				'<button type="button" class="btn btn-default dropdown-toggle month-form disabled" name="month" data-toggle="dropdown" style="width:100%">选择月份<span class="caret"></span></button>' +
+				'<ul class="dropdown-menu dropdown-month" style="min-width: 0;width:100%"></ul>' +
+			'</div></div>' +
+		'</div>';
+
+	var formHead =
+		'<form id="downloadForm" action="/download" method="post">';
+
+	var dummyInput = '<input type="text" name="date" style="display:none"/>';
+	var formTail = '</form>';
+	BootstrapDialog.show({
+		title : '下载水深数据',
+		message : formBody + formHead + dummyInput + formTail + waitingGIF,
+		asynchronize: false,
+
+		onshown: function(dialog){
+			$('#loading-indicator').show();
+			dialog.getButton('btn-download').disable();
+
+			$.ajax({
+				url: "/getdate",
+				type: "GET",
+				contentType: false   // tell jQuery not to set contentType
+			}).fail(function() {
+				alert("未连接到服务器!");
+				$('#loading-indicator').hide();
+
+			}).done(function(date) {
+				$('#loading-indicator').hide();
+
+				console.log(date);
+				var years = getYears(date);
+				for (i = 0; i < years.length; i++) {
+					$('.dropdown-year').append('<li><a href="#" style="text-align: center">' + years[i] +  '年</a></li>');
+				}
+				$('.dropdown-year li').click(function(e){
+					e.preventDefault();
+					var selected = $(this).text();
+					$('.year-form').text(selected);
+					$('.month-form').removeClass("disabled");
+					$('.month-form').html('选择月份<span class="caret"></span>');
+					dialog.getButton('btn-download').disable();
+					var months = getMonths(date, selected);
+					$('.dropdown-month').empty();
+					for (i = 0; i < months.length; i++) {
+						$('.dropdown-month').append('<li><a href="#" style="text-align: center">' + months[i] + '月</a></li>');
+					}
+					$('.dropdown-month li').click(function(e){
+						e.preventDefault();
+						var selected = $(this).text();
+						$('.month-form').text(selected);
+						dialog.getButton('btn-download').enable();
+					});
+				});
+			})
+
+
+		},
+		buttons : [{
+			label : '取消',
+			action : function(dialog) {
+				dialog.close();
+			}
+		}, {
+			id : 'btn-download',
+			label : '下载',
+			cssClass : 'btn-primary',
+			action : function(dialog){
+				downloadHandler($('#downloadForm')[0]);
+			}
+		}]
+	});
+}
+
+function encrypt(thisform) {
+	with(thisform) {
+		password.value = SHA1(password.value);
+	}
+}
 
 function changePasswordDialog() {
 	var formHead =
@@ -316,4 +429,27 @@ function addUserDialog() {
 		}]
 	});
 
+}
+
+
+function getYears(date) {
+	var years = [];
+	var last = "";
+	for (i = 0; i < date.length; i++) {
+		if (last != date[i].substr(0, 2)) {
+			years.push("20" + date[i].substr(0, 2));
+			last = date[i].substr(0, 2);
+		}
+	}
+	return years;
+}
+
+function getMonths(date, year) {
+	var months = [];
+	for (i = date.length - 1; i >= 0; i--) {
+		if (year.substr(2, 2) == date[i].substr(0, 2)) {
+			months.push(date[i].substr(3, 2));
+		}
+	}
+	return months;
 }

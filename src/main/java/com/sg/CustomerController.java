@@ -32,10 +32,9 @@ public class CustomerController {
 						   @RequestParam(value = "phone") String phone,
 						   @RequestParam(value = "privilege") String rawPrivilege) {
 
-		ApplicationContext context =
-			new ClassPathXmlApplicationContext("Spring-Module.xml");
-		System.out.println(rawPrivilege);
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
+
 		Set<String> ps = new HashSet<String>();
 		String[] splits = rawPrivilege.split(",");
 		for (String split : splits) {
@@ -53,16 +52,13 @@ public class CustomerController {
 			privilege += "|";
 		}
 		privilege = privilege.substring(0, privilege.length() - 1);
-		System.out.println(privilege);
 		return customerDAO.insert(new Customer(userId, password, name, phone, privilege));
 	}
 
 	@RequestMapping(path = "/deleteuser", method = RequestMethod.POST)
 	public int deleteCustomer(@RequestParam(value = "userId") String userId) {
 
-		ApplicationContext context =
-			new ClassPathXmlApplicationContext("Spring-Module.xml");
-
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 		return customerDAO.delete(userId);
 	}
@@ -72,9 +68,7 @@ public class CustomerController {
 							  @RequestParam(value = "oldPassword") String oldPassword,
 							  @RequestParam(value = "newPassword") String newPassword) {
 
-		ApplicationContext context =
-			new ClassPathXmlApplicationContext("Spring-Module.xml");
-
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		return customerDAO.changePassword(new Customer(userId, oldPassword), newPassword);
@@ -84,9 +78,8 @@ public class CustomerController {
 	@RequestMapping(path = "/login", method = RequestMethod.POST)
 	public String login(@RequestParam(value = "userId") String userId,
 					 @RequestParam(value = "password") String password) {
-		ApplicationContext context =
-			new ClassPathXmlApplicationContext("Spring-Module.xml");
 
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		Customer customer = new Customer(userId, password);

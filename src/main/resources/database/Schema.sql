@@ -13,7 +13,7 @@ CREATE TABLE `customer` (
 
 CREATE TABLE `harbor_date` (
   `DATE_ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `DATE` varchar(5) NOT NULL,
+  `MEASURE_DATE` varchar(5) NOT NULL,
   PRIMARY KEY(`DATE_ID`)
 );
 
@@ -21,7 +21,7 @@ CREATE TABLE `harbor_measure` (
   `LONGITUDE` DOUBLE NOT NULL,
   `LATITUDE` DOUBLE NOT NULL,
   `DEPTH` DOUBLE NOT NULL,
-  `DATE_ID` int(10),
+  `DATE_ID` int(10) unsigned NOT NULL ,
   FOREIGN KEY(`DATE_ID`) references harbor_date(`DATE_ID`)
 );
 
