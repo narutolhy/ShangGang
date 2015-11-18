@@ -56,6 +56,70 @@ function addUserHandler(thisform) {
 	}
 }
 
+function changePrivilegeHandler(thisform, userId, privilegeDialog, userDialog) {
+	with (thisform) {
+		var ps = "";
+		for (i = 0; i < privilege.length; i++) {
+			if (privilege[i].checked) {
+				ps += privilege[i].value + ",";
+			}
+		}
+		if (ps.length > 0) {
+			ps = ps.substr(0, ps.length - 1);
+		}
+
+		$.ajax({
+			method: "POST",
+			url: "/changeprivilege",
+			data: {userId: userId, privilege: ps}
+		}).fail(function() {
+			alert( "未连接到服务器!" );
+		}).done(function( data ) {
+			if (data.isSuccess == 1) {
+				alert('用户权限修改成功！');
+				var user = userDialog.getData("user");
+				for (i = 0; i < user.length; i++) {
+					if (user[i].userId == userId) {
+						user[i].privilege = data.privilege;
+					}
+				}
+				privilegeDialog.close();
+				showTableEntry(userDialog);
+
+			} else {
+				alert('服务器异常！');
+			}
+		});
+	}
+}
+
+function deleteUserHandler(userId, dialog) {
+	$.ajax({
+		method: "POST",
+		url: "/deleteuser",
+		data: {userId: userId}
+	}).fail(function() {
+		alert( "未连接到服务器!" );
+	}).done(function( data ) {
+		if (data == 1) {
+			alert('删除成功！');
+			var data = dialog.getData("user");
+			for (i = 0; i < data.length; i++) {
+				if (data[i].userId == userId) {
+					data.splice(i, 1);
+				}
+			}
+			showTableEntry(dialog);
+			showTablePage(dialog);
+		} else if (data == 0) {
+			alert('该用户名不存在！');
+		} else {
+			alert('服务器异常！');
+		}
+	});
+
+}
+
 function changePasswordHandler(thisform) {
 	with (thisform) {
 		var regexp = /^[a-zA-Z0-9]+$/;
@@ -158,7 +222,6 @@ function uploadDialog() {
 	BootstrapDialog.show({
 		title : '上传水深数据',
 		message : formHead + formBody + formTail + waitingGIF,
-		asynchronize: false,
 
 		onshown: function(dialog){
 			$('input').iCheck({
@@ -182,8 +245,9 @@ function uploadDialog() {
 
 function downloadDialog() {
 
-
 	var waitingGIF = '<img src="/img/loading.gif" id="loading-indicator" style="display:none" />';
+
+	var formHead = '<form id="downloadForm" action="/download" method="post">';
 
 	var formBody =
 		'<div class="row"><div class="col-lg-4 col-lg-offset-4"><label class="pull-right">请选择对应的时间：</label></div></div>' +
@@ -198,15 +262,12 @@ function downloadDialog() {
 			'</div></div>' +
 		'</div>';
 
-	var formHead =
-		'<form id="downloadForm" action="/download" method="post">';
 
 	var dummyInput = '<input type="text" name="date" style="display:none"/>';
 	var formTail = '</form>';
 	BootstrapDialog.show({
 		title : '下载水深数据',
 		message : formBody + formHead + dummyInput + formTail + waitingGIF,
-		asynchronize: false,
 
 		onshown: function(dialog){
 			$('#loading-indicator').show();
@@ -274,8 +335,7 @@ function encrypt(thisform) {
 }
 
 function changePasswordDialog() {
-	var formHead =
-		'<form id="changePasswordForm" >';
+	var formHead = '<form id="changePasswordForm" >';
 
 	var account =
 		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
@@ -304,7 +364,6 @@ function changePasswordDialog() {
 	BootstrapDialog.show({
 		title : '修改密码',
 		message : formHead + account + oldPassword + newPassword + formTail,
-		asynchronize: false,
 
 		onshown: function(dialog){
 			$('input').iCheck({
@@ -329,8 +388,7 @@ function changePasswordDialog() {
 
 
 function addUserDialog() {
-	var formHead =
-		'<form id="signUpForm" >';
+	var formHead = '<form id="signUpForm" >';
 
 	var account =
 		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
@@ -408,7 +466,6 @@ function addUserDialog() {
 	BootstrapDialog.show({
 		title : '添加新用户',
 		message : formHead + account + password + name + phone + table + formTail,
-		asynchronize: false,
 
 		onshown: function(dialog){
 			$('input').iCheck({
@@ -431,7 +488,225 @@ function addUserDialog() {
 
 }
 
+function deleteUserDialog() {
+	var waitingGIF = '<img src="/img/loading.gif" id="loading-indicator" style="display:none" />';
 
+	var formHead =
+		'<form id="delteUserForm" >';
+	var table =
+		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">用户管理</div>' +
+		'<table class="table table-hover user-table">' +
+			'<thead><tr><th>账号</th><th>姓名</th><th>联系方式</th><th>最近登录</th><th>权限</th></tr></thead>' +
+			'<tbody>' +
+		'</tbody>' +
+		'</table></div>';
+	var formTail = '</form>';
+
+	var pagination = '<div class="text-center"><ul class="pagination" margin="auto"></ul></div>';
+
+	BootstrapDialog.show({
+		title : '用户管理',
+		message : formHead + table + formTail + pagination + waitingGIF,
+		cssClass : 'deleteuser-dialog',
+		onshown: function(dialog){
+
+			$('#loading-indicator').show();
+
+			$.ajax({
+				url: "/getuser",
+				type: "GET",
+				contentType: false   // tell jQuery not to set contentType
+			}).fail(function() {
+				alert("未连接到服务器!");
+				$('#loading-indicator').hide();
+
+			}).done(function(data) {
+				$('#loading-indicator').hide();
+				dialog.setData("user", data);
+				dialog.setData("lastEntry", "");
+				showTablePage(dialog);
+				showTableEntry(dialog);
+			})
+
+
+		},
+		buttons : [{
+			label : '取消',
+			action : function(dialog) {
+				dialog.close();
+			}
+		},{
+			id : 'btn-privilege',
+			label : '修改权限',
+			cssClass : 'btn-warning',
+			action : function(dialog){
+				var last = dialog.getData("lastEntry");
+				var account = last.innerHTML.substring(4, last.innerHTML.indexOf('</td>'));
+				var privilege = last.innerHTML.substring(last.innerHTML.lastIndexOf('<td>') + 4, last.innerHTML.lastIndexOf('</td>'));
+				changePrivilegeDialog(account, privilege, dialog);
+			}
+		}, {
+			id : 'btn-delete',
+			label : '删除用户',
+			cssClass : 'btn-danger',
+			action : function(dialog){
+				var last = dialog.getData("lastEntry");
+				deleteUserHandler(last.innerHTML.substring(4, last.innerHTML.indexOf('</td>')), dialog);
+			}
+		}]
+	});
+}
+
+function changePrivilegeDialog(account, privilege, userDialog) {
+	var formHead = '<form id="changePrivilegeForm" >';
+
+	var table =
+		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">权限设置</div>' +
+		'<table class="table table-hover">' +
+			'<thead><tr><th>权限</th><th>洋山港</th><th>罗泾港</th><th>外高桥港</th><th>黄浦江</th></tr></thead>' +
+			'<tbody>' +
+				'<tr><td>查看水深</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="11"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="21"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="31"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="41"></td>' +
+				'</tr>' +
+				'<tr><td>预测</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="12"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="22"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="32"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="42"></td>' +
+				'</tr>' +
+				'<tr><td>预警</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="13"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="23"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="33"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="43"></td>' +
+				'</tr>' +
+				'<tr><td>导入数据</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="14"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="24"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="34"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="44"></td>' +
+				'</tr>' +
+				'<tr><td>导出数据</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="15"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="25"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="35"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="45"></td>' +
+				'</tr>' +
+				'<tr><td>土方计算</td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="16"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="26"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="36"></td>' +
+					'<td><input type="checkbox" class="form-control" name="privilege" value="46"></td>' +
+				'</tr>' +
+			'</tbody>' +
+		'</table></div>';
+
+	var formTail = '</form>';
+
+	BootstrapDialog.show({
+		title : '修改用户' + account + '的权限',
+		message : formHead + table + formTail,
+
+		onshown: function(dialog){
+			$('input').iCheck({
+				checkboxClass: 'icheckbox_flat-green'
+			});
+		},
+		buttons : [{
+			label : '取消',
+			action : function(dialog) {
+				dialog.close();
+			}
+		}, {
+			label : '确认修改',
+			cssClass : 'btn-primary',
+			action : function(dialog){
+				changePrivilegeHandler($('#changePrivilegeForm')[0], account, dialog, userDialog)
+			}
+		}]
+	});
+
+}
+
+function showTablePage(dialog) {
+	var data = dialog.getData("user");
+	var page = 0;
+	if (dialog.getData("lastPage") != null) {
+		page = dialog.getData("lastPage").value - 1;
+	}
+
+	var numOfPages = data.length / 10;
+	if (data.length % 10 != 0) {
+		numOfPages+=1;
+	}
+	$('.pagination').empty();
+	for (i = 1; i <= numOfPages; i++) {
+		var li = '<li value=' + i + '><a >' + i + '</a></li>';
+		$('.pagination').append(li);
+	}
+
+	dialog.setData("lastPage", $('.pagination li')[page]);
+
+	$(dialog.getData("lastPage")).addClass("disabled");
+	$('.pagination li').click(function() {
+
+		$(this).addClass("disabled");
+		var last = dialog.getData("lastPage");
+		$(last).removeClass("disabled");
+		dialog.setData("lastPage", this);
+		showTableEntry(dialog);
+	})
+
+}
+
+function showTableEntry(dialog) {
+	dialog.getButton('btn-delete').disable();
+	dialog.getButton('btn-privilege').disable();
+	var data = dialog.getData("user");
+	var page = 1;
+	if (dialog.getData("lastPage") != null) {
+		page = dialog.getData("lastPage").value;
+	}
+
+	if (dialog.getData("lastEntry") != "") {
+		$(dialog.getData("lastEntry")).removeClass("table-active");
+		dialog.setData("lastEntry", "");
+	}
+	$('.user-table tbody').empty();
+	for (i = 10 * (page - 1); i < Math.min(data.length, 10 * page); i++) {
+		with (data[i]) {
+			var tr = '<tr><td>' + userId + '</td>' +
+				'<td>' + getRideOfNullAndEmpty(name) + '</td>' +
+				'<td>' + getRideOfNullAndEmpty(phone) + '</td>' +
+				'<td>' + getRideOfNullAndEmpty(lastOnline) + '</td>' +
+				'<td>' + privilege + '</td></tr>';
+			$('.user-table tbody').append(tr);
+		}
+	}
+
+	$('.user-table tr').click(function() {
+		$(this).addClass("table-active");
+		dialog.getButton('btn-delete').enable();
+		dialog.getButton('btn-privilege').enable();
+		var last = dialog.getData("lastEntry");
+		if (last != "") {
+			$(last).removeClass("table-active");
+		}
+		dialog.setData("lastEntry",this);
+
+	})
+}
+
+function getRideOfNullAndEmpty(s) {
+	if (s == null || s == "") {
+		return "无";
+	} else {
+		return s;
+	}
+}
 function getYears(date) {
 	var years = [];
 	var last = "";

@@ -14,6 +14,10 @@ public interface CustomerDAO {
 
 	public int changePassword(Customer customer, String newPassword);
 
+	public int changePrivilege(Customer customer, String privilege);
+
 	public int login(Customer customer);
+
+	public Customer[] getAllUser();
 
 }

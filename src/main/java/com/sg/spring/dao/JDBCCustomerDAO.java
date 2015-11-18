@@ -11,6 +11,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class JDBCCustomerDAO implements CustomerDAO {
@@ -127,6 +129,34 @@ public class JDBCCustomerDAO implements CustomerDAO {
 		}
 	}
 
+	public int changePrivilege(Customer customer, String privilege) {
+		String sql = "UPDATE CUSTOMER SET PRIVILEGE = ? WHERE USER_ID = ?";
+		Connection conn = null;
+		//  1 : success
+		// -1 : database is down
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, privilege);
+			ps.setString(2, customer.getUserId());
+			ps.executeUpdate();
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
+		}
+	}
+
 	public int login(Customer customer) {
 		String sql = "UPDATE CUSTOMER SET LAST_ONLINE = ? WHERE USER_ID = ?";
 		Connection conn = null;
@@ -163,6 +193,42 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				} catch (SQLException e) {}
 			}
 			return isSuccess;
+		}
+	}
+
+	public Customer[] getAllUser() {
+		String sql = "SELECT * FROM CUSTOMER";
+		List<Customer> result = new ArrayList<Customer>();
+		Connection conn = null;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				result.add(new Customer(
+					rs.getString("USER_ID"),
+					"",
+					rs.getString("NAME"),
+					rs.getString("PHONE"),
+					rs.getString("PRIVILEGE"),
+					rs.getString("LAST_ONLINE")
+				));
+			}
+			rs.close();
+			ps.close();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			Customer[] customers = new Customer[result.size()];
+			for (int i = 0; i < result.size(); i++) {
+				customers[i] = result.get(i);
+			}
+			return customers;
 		}
 	}
 

@@ -24,6 +24,13 @@ import java.util.Set;
 @RestController
 public class CustomerController {
 
+	@RequestMapping(path = "/getuser", method = RequestMethod.GET)
+	public Customer[] getCustomer() {
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
+		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
+
+		return customerDAO.getAllUser();
+	}
 
 	@RequestMapping(path = "/adduser", method = RequestMethod.POST)
 	public int addCustomer(@RequestParam(value = "userId") String userId,
@@ -35,24 +42,27 @@ public class CustomerController {
 		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
-		Set<String> ps = new HashSet<String>();
-		String[] splits = rawPrivilege.split(",");
-		for (String split : splits) {
-			ps.add(split);
-		}
-		String privilege = "";
-		for (int i = 1; i <= 4; i++) {
-			for (int j = 1; j <= 6; j++) {
-				if (ps.contains("" + i + j)) {
-					privilege += "Y";
-				} else {
-					privilege += "N";
-				}
-			}
-			privilege += "|";
-		}
-		privilege = privilege.substring(0, privilege.length() - 1);
+		String privilege = parsePrivilege(rawPrivilege);
 		return customerDAO.insert(new Customer(userId, password, name, phone, privilege));
+	}
+
+	@RequestMapping(path = "/changeprivilege", produces = "application/json", method = RequestMethod.POST)
+	public String changePrivilege(@RequestParam(value = "userId") String userId,
+							   @RequestParam(value = "privilege") String rawPrivilege) {
+
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
+		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
+
+		String privilege = parsePrivilege(rawPrivilege);
+
+		int isSuccess = customerDAO.changePrivilege(new Customer(userId), privilege);
+		JSONObject js = new JSONObject();
+
+		js.put("isSuccess", isSuccess);
+		if (isSuccess == 1) {
+			js.put("privilege", privilege);
+		}
+		return js.toString();
 	}
 
 	@RequestMapping(path = "/deleteuser", method = RequestMethod.POST)
@@ -97,5 +107,25 @@ public class CustomerController {
 	}
 
 
+
+	private String parsePrivilege(String rawPrivilege) {
+		Set<String> ps = new HashSet<String>();
+		String[] splits = rawPrivilege.split(",");
+		for (String split : splits) {
+			ps.add(split);
+		}
+		String privilege = "";
+		for (int i = 1; i <= 4; i++) {
+			for (int j = 1; j <= 6; j++) {
+				if (ps.contains("" + i + j)) {
+					privilege += "Y";
+				} else {
+					privilege += "N";
+				}
+			}
+			privilege += "|";
+		}
+		return privilege.substring(0, privilege.length() - 1);
+	}
 
 }

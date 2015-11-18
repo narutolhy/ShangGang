@@ -10,17 +10,27 @@ public class Customer {
 	private String name;
 	private String phone;
 	private String privilege;
+	private String lastOnline;
 
-	public Customer(String id, String password, String name, String phone, String privilege) {
+	public Customer(String id, String password, String name, String phone, String privilege, String lastOnline) {
 		this.userId = id;
 		this.name = name;
 		this.password = password;
 		this.phone = phone;
 		this.privilege = privilege;
+		this.lastOnline = lastOnline;
+	}
+
+	public Customer(String id, String password, String name, String phone, String privilege) {
+		this(id, password, name, phone, privilege, null);
 	}
 
 	public Customer(String id, String password) {
-		this(id, password, null, "", null);
+		this(id, password, null, "", null, null);
+	}
+
+	public Customer(String userId) {
+		this(userId, null);
 	}
 
 	//getter and setter methods
@@ -42,6 +52,10 @@ public class Customer {
 
 	public String getPrivilege() {
 		return privilege;
+	}
+
+	public String getLastOnline() {
+		return lastOnline;
 	}
 
 	public void setPhone(String phone) {
