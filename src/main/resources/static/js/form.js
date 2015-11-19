@@ -420,46 +420,9 @@ function addUserDialog() {
 		'</div></div></div>';
 	var table =
 		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">权限设置</div>' +
-		'<table class="table table-hover">' +
+		'<table class="table table-hover privilege-table">' +
 			'<thead><tr><th>权限</th><th>洋山港</th><th>罗泾港</th><th>外高桥港</th><th>黄浦江</th></tr></thead>' +
-			'<tbody>' +
-				'<tr><td>查看水深</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="11"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="21"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="31"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="41"></td>' +
-				'</tr>' +
-				'<tr><td>预测</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="12"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="22"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="32"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="42"></td>' +
-				'</tr>' +
-				'<tr><td>预警</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="13"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="23"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="33"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="43"></td>' +
-				'</tr>' +
-				'<tr><td>导入数据</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="14"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="24"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="34"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="44"></td>' +
-				'</tr>' +
-				'<tr><td>导出数据</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="15"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="25"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="35"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="45"></td>' +
-				'</tr>' +
-				'<tr><td>土方计算</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="16"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="26"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="36"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="46"></td>' +
-				'</tr>' +
-			'</tbody>' +
+			'<tbody></tbody>' +
 		'</table></div>';
 
 	var formTail = '</form>';
@@ -468,6 +431,20 @@ function addUserDialog() {
 		message : formHead + account + password + name + phone + table + formTail,
 
 		onshown: function(dialog){
+
+			var prName = new Array("查看水深", "预测", "预警", "导入数据", "导出数据", "土方计算");
+			var table = $('.privilege-table tbody');
+			for (i = 0; i < 6; i++) {
+				var entry = "";
+				entry += '<tr><td>' + prName[i] + '</td>';
+				for (j = 0; j < 4; j++) {
+					var value = "" + j + i;
+					entry += '<td><input type="checkbox" class="form-control" name="privilege" value="' + value +'"></td>';
+				}
+				entry += '</tr>';
+				table.append(entry);
+			}
+
 			$('input').iCheck({
 				checkboxClass: 'icheckbox_flat-green'
 			});
@@ -562,46 +539,9 @@ function changePrivilegeDialog(account, privilege, userDialog) {
 
 	var table =
 		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">权限设置</div>' +
-		'<table class="table table-hover">' +
+		'<table class="table table-hover privilege-table">' +
 			'<thead><tr><th>权限</th><th>洋山港</th><th>罗泾港</th><th>外高桥港</th><th>黄浦江</th></tr></thead>' +
-			'<tbody>' +
-				'<tr><td>查看水深</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="11"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="21"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="31"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="41"></td>' +
-				'</tr>' +
-				'<tr><td>预测</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="12"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="22"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="32"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="42"></td>' +
-				'</tr>' +
-				'<tr><td>预警</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="13"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="23"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="33"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="43"></td>' +
-				'</tr>' +
-				'<tr><td>导入数据</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="14"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="24"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="34"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="44"></td>' +
-				'</tr>' +
-				'<tr><td>导出数据</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="15"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="25"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="35"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="45"></td>' +
-				'</tr>' +
-				'<tr><td>土方计算</td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="16"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="26"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="36"></td>' +
-					'<td><input type="checkbox" class="form-control" name="privilege" value="46"></td>' +
-				'</tr>' +
-			'</tbody>' +
+			'<tbody></tbody>' +
 		'</table></div>';
 
 	var formTail = '</form>';
@@ -611,6 +551,24 @@ function changePrivilegeDialog(account, privilege, userDialog) {
 		message : formHead + table + formTail,
 
 		onshown: function(dialog){
+			var pr = parsePrivilege(privilege);
+			var prName = new Array("查看水深", "预测", "预警", "导入数据", "导出数据", "土方计算");
+			var table = $('.privilege-table tbody');
+			for (i = 0; i < 6; i++) {
+				var entry = "";
+				entry += '<tr><td>' + prName[i] + '</td>';
+				for (j = 0; j < 4; j++) {
+					var value = "" + j + i;
+					if (pr[j][i]) {
+						entry += '<td><input type="checkbox" class="form-control" name="privilege" value="' + value +'" checked="true"></td>';
+					} else {
+						entry += '<td><input type="checkbox" class="form-control" name="privilege" value="' + value +'"></td>';
+					}
+				}
+				entry += '</tr>';
+				table.append(entry);
+			}
+
 			$('input').iCheck({
 				checkboxClass: 'icheckbox_flat-green'
 			});
@@ -700,6 +658,19 @@ function showTableEntry(dialog) {
 	})
 }
 
+//---------------------------Utility function-------------------------------
+function parsePrivilege(privilege) {
+	var result = [];
+	var splits = privilege.split("|");
+	for (i = 0; i < splits.length; i++) {
+		var tmp = [];
+		for (j = 0; j < splits[i].length; j++) {
+			tmp.push(splits[i].charAt(j) == 'Y');
+		}
+		result.push(tmp);
+	}
+	return result;
+}
 function getRideOfNullAndEmpty(s) {
 	if (s == null || s == "") {
 		return "无";
