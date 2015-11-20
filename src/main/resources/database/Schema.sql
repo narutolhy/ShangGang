@@ -6,6 +6,7 @@ CREATE TABLE `customer` (
   `USER_ID` varchar(20) NOT NULL UNIQUE,
   `PASSWORD` varchar(60) NOT NULL,
   `PRIVILEGE` varchar(40),
+  `UNIT` varchar(40),
   `LAST_ONLINE` DATE,
   `PHONE` varchar(20),
   PRIMARY KEY (`CUST_ID`)

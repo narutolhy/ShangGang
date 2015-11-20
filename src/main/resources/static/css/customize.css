@@ -20,3 +20,8 @@
 .deleteuser-dialog .modal-dialog {
     width: 750px;
 }
+
+#sizing-addon2 {
+    width: 110px;
+    text-align: left;
+}

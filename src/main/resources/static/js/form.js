@@ -23,11 +23,6 @@ function addUserHandler(thisform) {
 			password.focus();
 			return;
 		}
-		if (name == null || name.value == "") {
-			alert("请填写姓名！");
-			name.focus();
-			return;
-		}
 		var ps = "";
 		for (i = 0; i < privilege.length; i++) {
 			if (privilege[i].checked) {
@@ -41,7 +36,7 @@ function addUserHandler(thisform) {
 			method: "POST",
 			url: "/adduser",
 			data: {userId: userId.value, password: SHA1(password.value),
-				name: name.value, phone: phone.value, privilege: ps}
+				name: name.value, phone: phone.value, unit: unit.value, privilege: ps}
 		}).fail(function() {
 			alert( "未连接到服务器!" );
 		}).done(function( data ) {
@@ -84,7 +79,7 @@ function changePrivilegeHandler(thisform, userId, privilegeDialog, userDialog) {
 					}
 				}
 				privilegeDialog.close();
-				showTableEntry(userDialog);
+				//showTableEntry(userDialog);
 
 			} else {
 				alert('服务器异常！');
@@ -120,23 +115,25 @@ function deleteUserHandler(userId, dialog) {
 
 }
 
-function changePasswordHandler(thisform) {
+function changeInfoHandler(thisform, data) {
 	with (thisform) {
 		var regexp = /^[a-zA-Z0-9]+$/;
-		if (!regexp.test(newPassword.value) || newPassword.value.length < 5 || newPassword.value.length > 18) {
+		if (newPassword.value.length != 0 &&
+			(!regexp.test(newPassword.value) || newPassword.value.length < 5 || newPassword.value.length > 18)) {
 			alert("新密码必须为5至18位字母和数字的组合！");
 			newPassword.focus();
 			return;
 		}
 		$.ajax({
 			method: "POST",
-			url: "/changepassword",
-			data: {userId: userId.value, oldPassword: SHA1(oldPassword.value), newPassword: SHA1(newPassword.value)}
+			url: "/changeinfo",
+			data: {userId: data.userId, name: name.value, phone: phone.value, unit: unit.value,
+					oldPassword: SHA1(password.value), newPassword: newPassword.value == "" ? "" : SHA1(newPassword.value)}
 		}).fail(function () {
 			alert("未连接到服务器!");
 		}).done(function (data) {
 			if (data == 1) {
-				alert('密码修改成功！');
+				alert('信息修改成功！');
 			} else if (data == 0) {
 				alert('旧密码不正确！');
 			} else {
@@ -182,8 +179,10 @@ function uploadHandler(thisform, override) {
 				}
 			} else if (data == 1) {
 				alert("数据上传成功！");
-			} else {
+			} else if (data == -1) {
 				alert("服务器异常, 上传失败！");
+			} else {
+				alert("数据格式不符合要求，请确保输入每行为3个数字并以空格分割！")
 			}
 		});
 		return false;
@@ -328,47 +327,111 @@ function downloadDialog() {
 	});
 }
 
-function encrypt(thisform) {
+function login(thisform) {
 	with(thisform) {
 		password.value = SHA1(password.value);
+		$.ajax({
+			url: "/login",
+			type: "POST",
+			data: {userId: userId.value, password: password.value}
+		}).fail(function() {
+			alert("未连接到服务器!");
+		}).done(function(data) {
+			changeInfoDialog(data);
+		});
 	}
 }
 
-function changePasswordDialog() {
-	var formHead = '<form id="changePasswordForm" >';
+function removeDisabled(id) {
+	console.log($('#changeInfoForm #'+ id).attr("disabled", false));
+	$('#changeInfoForm #'+ id).focus();
+	$('#changeInfoForm #'+ id).focusout(function() {$('#changeInfoForm #'+ id).attr("disabled", true)});
 
-	var account =
-		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
+	if (id == "password") {
+		$('#changeInfoForm #'+ id).val("");
+		$('#changeInfoForm #'+ id).attr("placeholder", "请输入旧密码");
+		$(".new-password").css("display", "block");
+	}
+}
+
+function changeInfoDialog(data) {
+	var formHead = '<form id="changeInfoForm" >';
+
+	var name =
+		'<div class="row"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
 			'<span class="input-group-addon" id="sizing-addon2">' +
-				'<span class="glyphicon glyphicon-user" aria-hidden="true"></span>' +
+				'<span class="glyphicon glyphicon-file" aria-hidden="true" style="padding-right: 10px"></span>姓名' +
 			'</span>' +
-			'<input type="text" class="form-control" name="userId" placeholder="账号">' +
+			'<input type="text" class="form-control" id="name" disabled="true" name="name" style="text-align: center">' +
+			'<span class="input-group-btn">' +
+				'<button class="btn btn-default" type="button" onclick=removeDisabled("name");>' +
+					'<span class="glyphicon glyphicon-pencil" aria-hidden="true" style=""></span>' +
+				'</button>' +
+			'</span>' +
 		'</div></div></div>';
-	var oldPassword =
-		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
+
+	var phone =
+		'<div class="row"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
 			'<span class="input-group-addon" id="sizing-addon2">' +
-				'<span class="glyphicon glyphicon-lock" aria-hidden="true"></span>' +
+				'<span class="glyphicon glyphicon-earphone" aria-hidden="true" style="padding-right: 10px"></span>联系方式' +
 			'</span>' +
-			'<input type="password" class="form-control" name="oldPassword" placeholder="旧密码" aria-describedby="sizing-addon2">' +
+			'<input type="text" class="form-control" disabled="true" id="phone" name="phone" style="text-align: center">' +
+			'<span class="input-group-btn">' +
+				'<button class="btn btn-default" type="button" onclick=removeDisabled("phone");>' +
+					'<span class="glyphicon glyphicon-pencil" aria-hidden="true" style=""></span>' +
+				'</button>' +
+			'</span>' +
+		'</div></div></div>';
+
+	var unit =
+		'<div class="row"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
+			'<span class="input-group-addon" id="sizing-addon2">' +
+				'<span class="glyphicon glyphicon-home" aria-hidden="true" style="padding-right: 10px"></span>单位' +
+			'</span>' +
+			'<input type="text" class="form-control" disabled="true" id="unit" name="unit" style="text-align: center">' +
+			'<span class="input-group-btn">' +
+				'<button class="btn btn-default" type="button" onclick=removeDisabled("unit");>' +
+					'<span class="glyphicon glyphicon-pencil" aria-hidden="true" style=""></span>' +
+				'</button>' +
+			'</span>' +
+		'</div></div></div>';
+
+	var password =
+		'<div class="row"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
+			'<span class="input-group-addon" id="sizing-addon2">' +
+				'<span class="glyphicon glyphicon-lock" aria-hidden="true" style="padding-right: 10px"></span>密码' +
+			'</span>' +
+			'<input type="password" class="form-control" disabled="true" id="password" name="password" style="text-align: center">' +
+			'<span class="input-group-btn">' +
+				'<button class="btn btn-default" type="button" onclick=removeDisabled("password");>' +
+					'<span class="glyphicon glyphicon-pencil" aria-hidden="true" style=""></span>' +
+				'</button>' +
+			'</span>' +
 		'</div></div></div>';
 
 	var newPassword =
-		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
+		'<div class="row new-password" style="display:none;"><div class="col-lg-8 col-lg-offset-2"><div class="input-group">' +
 			'<span class="input-group-addon" id="sizing-addon2">' +
-				'<span class="glyphicon glyphicon-lock" aria-hidden="true"></span>' +
+				'<span class="glyphicon glyphicon-lock" aria-hidden="true" style="padding-right: 10px"></span>新密码' +
 			'</span>' +
-			'<input type="password" class="form-control" name="newPassword" placeholder="新密码" aria-describedby="sizing-addon2">' +
+			'<input type="password" class="form-control" placeholder="请输入新密码" id="newPassword" name="newPassword"  style="text-align: center">' +
+			'<span class="input-group-btn">' +
+				'<button class="btn btn-default" type="button" onclick=removeDisabled("newPassword")><span class="glyphicon glyphicon-pencil" aria-hidden="true" style=""></span></button>' +
+			'</span>' +
 		'</div></div></div>';
 
 	var formTail = '</form>';
 	BootstrapDialog.show({
-		title : '修改密码',
-		message : formHead + account + oldPassword + newPassword + formTail,
+		title : '修改用户信息',
+		message : formHead + name + phone + unit + password + newPassword + formTail,
 
 		onshown: function(dialog){
-			$('input').iCheck({
-				checkboxClass: 'icheckbox_flat-green'
-			});
+			console.log(data.name);
+			$('#changeInfoForm #name').val(getRideOfNullAndEmpty(data.name));
+			$('#changeInfoForm #phone').val(getRideOfNullAndEmpty(data.phone));
+			$('#changeInfoForm #unit').val(getRideOfNullAndEmpty(data.unit));
+			$('#changeInfoForm #password').val("******");
+
 		},
 		buttons : [{
 			label : '取消',
@@ -379,7 +442,7 @@ function changePasswordDialog() {
 			label : '确认修改',
 			cssClass : 'btn-primary',
 			action : function(dialog){
-				changePasswordHandler($('#changePasswordForm')[0]);
+				changeInfoHandler($('#changeInfoForm')[0], data);
 			}
 		}]
 	});
@@ -408,15 +471,22 @@ function addUserDialog() {
 		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
 			'<span class="input-group-addon" id="sizing-addon2">' +
 				'<span class="glyphicon glyphicon-file" aria-hidden="true"></span>' +
-		'</span>' +
+			'</span>' +
 			'<input type="text" class="form-control" name="name" placeholder="用户姓名（选填）" aria-describedby="sizing-addon2">' +
 		'</div></div></div>';
 	var phone =
 		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
 			'<span class="input-group-addon" id="sizing-addon2">' +
 				'<span class="glyphicon glyphicon-earphone" aria-hidden="true"></span>' +
-		'</span>' +
+			'</span>' +
 			'<input type="text" class="form-control" name="phone" placeholder="联系方式（选填）" aria-describedby="sizing-addon2">' +
+		'</div></div></div>';
+	var unit =
+		'<div class="row"><div class="col-lg-6 col-lg-offset-3"><div class="input-group">' +
+			'<span class="input-group-addon" id="sizing-addon2">' +
+				'<span class="glyphicon glyphicon-home" aria-hidden="true"></span>' +
+			'</span>' +
+			'<input type="text" class="form-control" name="unit" placeholder="单位（选填）" aria-describedby="sizing-addon2">' +
 		'</div></div></div>';
 	var table =
 		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">权限设置</div>' +
@@ -428,7 +498,7 @@ function addUserDialog() {
 	var formTail = '</form>';
 	BootstrapDialog.show({
 		title : '添加新用户',
-		message : formHead + account + password + name + phone + table + formTail,
+		message : formHead + account + password + name + phone + unit + table + formTail,
 
 		onshown: function(dialog){
 
@@ -473,7 +543,7 @@ function deleteUserDialog() {
 	var table =
 		'<div class="panel panel-default" style="margin-top: 5%"><div class="panel-heading text-center">用户管理</div>' +
 		'<table class="table table-hover user-table">' +
-			'<thead><tr><th>账号</th><th>姓名</th><th>联系方式</th><th>最近登录</th><th>权限</th></tr></thead>' +
+			'<thead><tr><th>账号</th><th>姓名</th><th>联系方式</th><th>最近登录</th><th>单位</th></tr></thead>' +
 			'<tbody>' +
 		'</tbody>' +
 		'</table></div>';
@@ -519,7 +589,13 @@ function deleteUserDialog() {
 			action : function(dialog){
 				var last = dialog.getData("lastEntry");
 				var account = last.innerHTML.substring(4, last.innerHTML.indexOf('</td>'));
-				var privilege = last.innerHTML.substring(last.innerHTML.lastIndexOf('<td>') + 4, last.innerHTML.lastIndexOf('</td>'));
+				var privilege = "";
+				for (i = 0; i < dialog.getData("user").length; i++) {
+					console.log(dialog.getData("user")[i].userId);
+					if (dialog.getData("user")[i].userId ==  account) {
+						privilege = dialog.getData("user")[i].privilege;
+					}
+				}
 				changePrivilegeDialog(account, privilege, dialog);
 			}
 		}, {
@@ -640,7 +716,7 @@ function showTableEntry(dialog) {
 				'<td>' + getRideOfNullAndEmpty(name) + '</td>' +
 				'<td>' + getRideOfNullAndEmpty(phone) + '</td>' +
 				'<td>' + getRideOfNullAndEmpty(lastOnline) + '</td>' +
-				'<td>' + privilege + '</td></tr>';
+				'<td>' + getRideOfNullAndEmpty(unit) + '</td></tr>';
 			$('.user-table tbody').append(tr);
 		}
 	}

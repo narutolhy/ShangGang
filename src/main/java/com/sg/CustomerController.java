@@ -37,13 +37,14 @@ public class CustomerController {
 						   @RequestParam(value = "password") String password,
 						   @RequestParam(value = "name") String name,
 						   @RequestParam(value = "phone") String phone,
+						   @RequestParam(value = "unit") String unit,
 						   @RequestParam(value = "privilege") String rawPrivilege) {
 
 		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		String privilege = parsePrivilege(rawPrivilege);
-		return customerDAO.insert(new Customer(userId, password, name, phone, privilege));
+		return customerDAO.insert(new Customer(userId, password, name, phone, privilege, unit));
 	}
 
 	@RequestMapping(path = "/changeprivilege", produces = "application/json", method = RequestMethod.POST)
@@ -73,19 +74,21 @@ public class CustomerController {
 		return customerDAO.delete(userId);
 	}
 
-	@RequestMapping(path = "/changepassword", method = RequestMethod.POST)
+	@RequestMapping(path = "/changeinfo", method = RequestMethod.POST)
 	public int changePassword(@RequestParam(value = "userId") String userId,
+							  @RequestParam(value = "newPassword") String newPassword,
 							  @RequestParam(value = "oldPassword") String oldPassword,
-							  @RequestParam(value = "newPassword") String newPassword) {
+							  @RequestParam(value = "name") String name,
+							  @RequestParam(value = "phone") String phone,
+							  @RequestParam(value = "unit") String unit) {
 
 		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
 		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
-		return customerDAO.changePassword(new Customer(userId, oldPassword), newPassword);
-
+		return customerDAO.changeInfo(new Customer(userId, oldPassword, name, phone, null, unit), newPassword);
 	}
 
-	@RequestMapping(path = "/login", method = RequestMethod.POST)
+	@RequestMapping(path = "/login", produces = "application/json", method = RequestMethod.POST)
 	public String login(@RequestParam(value = "userId") String userId,
 					 @RequestParam(value = "password") String password) {
 
@@ -101,6 +104,8 @@ public class CustomerController {
 			js.put("name", customer.getName());
 			js.put("privilege", customer.getPrivilege());
 			js.put("phone", customer.getPhone());
+			js.put("unit", customer.getUnit());
+			js.put("userId", customer.getUserId());
 		}
 		return js.toString();
 

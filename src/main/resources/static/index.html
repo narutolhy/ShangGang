@@ -22,8 +22,6 @@
 
 	<input name="" type="button" value="添加新用户" onClick="addUserDialog()" />
 
-	<input name="" type="button" value="修改密码" onClick="changePasswordDialog()" />
-
 	<input name="" type="button" value="上传数据" onClick="uploadDialog()" />
 
 	<input name="" type="button" value="下载数据" onClick=" downloadDialog()" />
@@ -31,12 +29,12 @@
 	<input name="" type="button" value="管理用户" onClick=" deleteUserDialog()" />
 
 
-	<form action="/login" onsubmit="encrypt(this)" method="post">
+	<form action="/login" id="loginForm" method="post">
 		login:
 		<p>userid: <input type="text" name="userId" /></p>
 		<p>password: <input type="password" name="password" /></p>
 
-		<input type="submit" value="Submit" />
+		<button type="button" onclick="login($('#loginForm')[0])"> 修改用户信息</button>
 	</form>
 </body>
 </html>

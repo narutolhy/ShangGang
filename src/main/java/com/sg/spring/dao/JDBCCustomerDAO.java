@@ -25,7 +25,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 	public int insert(Customer customer) {
 
 		String sql = "INSERT INTO CUSTOMER " +
-			"(NAME, USER_ID, PASSWORD, PHONE, PRIVILEGE) VALUES (?, ?, ?, ?, ?)";
+			"(NAME, USER_ID, PASSWORD, PHONE, PRIVILEGE, UNIT) VALUES (?, ?, ?, ?, ?, ?)";
 		Connection conn = null;
 		//  1 : success
 		//  0 : user already exists
@@ -41,6 +41,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				ps.setString(3, customer.getPassword());
 				ps.setString(4, customer.getPhone());
 				ps.setString(5, customer.getPrivilege());
+				ps.setString(6, customer.getUnit());
 				ps.executeUpdate();
 				ps.close();
 				isSuccess = 1;
@@ -95,8 +96,8 @@ public class JDBCCustomerDAO implements CustomerDAO {
 		}
 	}
 
-	public int changePassword(Customer customer, String newPassword) {
-		String sql = "UPDATE CUSTOMER SET PASSWORD = ? WHERE USER_ID = ?";
+	public int changeInfo(Customer customer, String newPassword) {
+		String sql = "UPDATE CUSTOMER SET NAME = ?, PHONE = ?, UNIT = ?, PASSWORD = ? WHERE USER_ID = ?";
 		Connection conn = null;
 		//  1 : success
 		//  0 : password is not correct
@@ -104,10 +105,14 @@ public class JDBCCustomerDAO implements CustomerDAO {
 		int isSuccess = 0;
 		try {
 			conn = dataSource.getConnection();
-			if (findByUserId(customer.getUserId(), conn).getPassword().equals(customer.getPassword())) {
+			if (newPassword.equals("") ||
+					findByUserId(customer.getUserId(), conn).getPassword().equals(customer.getPassword())) {
 				PreparedStatement ps = conn.prepareStatement(sql);
-				ps.setString(1, newPassword);
-				ps.setString(2, customer.getUserId());
+				ps.setString(1, customer.getName());
+				ps.setString(2, customer.getPhone());
+				ps.setString(3, customer.getUnit());
+				ps.setString(4, newPassword.equals("") ? customer.getPassword() : newPassword);
+				ps.setString(5, customer.getUserId());
 				ps.executeUpdate();
 				ps.close();
 				isSuccess = 1;
@@ -177,6 +182,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				customer.setName(data.getName());
 				customer.setPhone(data.getPhone());
 				customer.setPrivilege(data.getPrivilege());
+				customer.setUnit(data.getUnit());
 				customer.setPassword("");
 			} else {
 				isSuccess = 0;
@@ -211,6 +217,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 					rs.getString("NAME"),
 					rs.getString("PHONE"),
 					rs.getString("PRIVILEGE"),
+					rs.getString("UNIT"),
 					rs.getString("LAST_ONLINE")
 				));
 			}
@@ -247,7 +254,8 @@ public class JDBCCustomerDAO implements CustomerDAO {
 					rs.getString("PASSWORD"),
 					rs.getString("NAME"),
 					rs.getString("PHONE"),
-					rs.getString("PRIVILEGE")
+					rs.getString("PRIVILEGE"),
+					rs.getString("UNIT")
 				);
 			}
 			rs.close();

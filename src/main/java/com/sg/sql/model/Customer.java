@@ -11,22 +11,24 @@ public class Customer {
 	private String phone;
 	private String privilege;
 	private String lastOnline;
+	private String unit;
 
-	public Customer(String id, String password, String name, String phone, String privilege, String lastOnline) {
+	public Customer(String id, String password, String name, String phone, String privilege, String unit, String lastOnline) {
 		this.userId = id;
 		this.name = name;
 		this.password = password;
 		this.phone = phone;
 		this.privilege = privilege;
+		this.unit = unit;
 		this.lastOnline = lastOnline;
 	}
 
-	public Customer(String id, String password, String name, String phone, String privilege) {
-		this(id, password, name, phone, privilege, null);
+	public Customer(String id, String password, String name, String phone, String privilege, String unit) {
+		this(id, password, name, phone, privilege, unit, null);
 	}
 
 	public Customer(String id, String password) {
-		this(id, password, null, "", null, null);
+		this(id, password, null, "", null, null, null);
 	}
 
 	public Customer(String userId) {
@@ -58,6 +60,10 @@ public class Customer {
 		return lastOnline;
 	}
 
+	public String getUnit() {
+		return unit;
+	}
+
 	public void setPhone(String phone) {
 		this.phone = phone;
 	}
@@ -72,5 +78,9 @@ public class Customer {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
 	}
 }

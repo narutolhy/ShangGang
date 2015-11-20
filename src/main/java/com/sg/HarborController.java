@@ -57,12 +57,16 @@ public class HarborController {
 										Double.parseDouble(splits[2])));
 				}
 				in.close();
-				return harborDAO.insert(data, name, override);
+				try {
+					return harborDAO.insert(data, name, override);
+				} catch (RuntimeException e) {
+					return -1;
+				}
 			} catch (Exception e) {
-				return -1;
+				return -2;
 			}
 		} else {
-			return 0;
+			return -2;
 		}
 	}
 

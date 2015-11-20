@@ -12,7 +12,7 @@ public interface CustomerDAO {
 
 	public int delete(String userId);
 
-	public int changePassword(Customer customer, String newPassword);
+	public int changeInfo(Customer customer, String newPassword);
 
 	public int changePrivilege(Customer customer, String privilege);
 
