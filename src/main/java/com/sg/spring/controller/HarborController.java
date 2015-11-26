@@ -1,11 +1,10 @@
-package com.sg;
+package com.sg.spring.controller;
 
-import com.sg.spring.dao.CustomerDAO;
 import com.sg.spring.dao.HarborDAO;
 import com.sg.sql.model.Harbor;
+import com.sg.util.ZipUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -77,14 +76,17 @@ public class HarborController {
 		HarborDAO harborDAO = (HarborDAO) context.getBean("harborDAO");
 
 		String tmpFile = System.getProperty("java.io.tmpdir") + "/" + date + ".txt";
+		String tmpZip = System.getProperty("java.io.tmpdir") + "/" + date + ".zip";
+
 		System.out.println(tmpFile);
 		harborDAO.dump(tmpFile, date);
+		ZipUtil.zipFile(tmpFile, tmpZip, date, "123456");
 
 		HttpHeaders respHeaders = new HttpHeaders();
 		respHeaders.setContentType(MediaType.parseMediaType("application/force-download"));
-		respHeaders.setContentDispositionFormData("attachment", date + ".txt");
+		respHeaders.setContentDispositionFormData("attachment", date + ".zip");
 
-		InputStreamResource isr = new InputStreamResource(new FileInputStream(new File(tmpFile)));
+		InputStreamResource isr = new InputStreamResource(new FileInputStream(new File(tmpZip)));
 		return new ResponseEntity<InputStreamResource>(isr, respHeaders, HttpStatus.OK);
 	}
 

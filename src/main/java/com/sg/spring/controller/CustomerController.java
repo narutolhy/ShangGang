@@ -1,10 +1,11 @@
-package com.sg;
+package com.sg.spring.controller;
 
 import com.sg.spring.dao.CustomerDAO;
 import com.sg.sql.model.Customer;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;

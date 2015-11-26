@@ -54,7 +54,12 @@
             <version>20140107</version>
         </dependency>
 
-
+        <!--encrypt zip-->
+        <dependency>
+            <groupId>de.idyl</groupId>
+            <artifactId>winzipaes</artifactId>
+            <version>1.0.1</version>
+        </dependency>
 
     </dependencies>
 
