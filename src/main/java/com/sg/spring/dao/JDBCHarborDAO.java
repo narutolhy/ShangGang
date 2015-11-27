@@ -69,41 +69,35 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public int dump(String dir, String date) {
+	public List<Harbor> dump(String date) {
 		String sql = "SELECT * FROM harbor_measure WHERE DATE_ID = ?";
 
-		int isSuccess = 0;
+		List<Harbor> result= new ArrayList<Harbor>();
 		Connection conn = null;
-		BufferedWriter bw = null;
 		try {
 			conn = dataSource.getConnection();
 			int dateId = findFKOfDate(conn, date);
-			bw = new BufferedWriter(new FileWriter(dir));
 
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, dateId);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				String line = new Harbor(rs.getDouble("longitude"),
+				result.add(new Harbor(rs.getDouble("longitude"),
 										rs.getDouble("latitude"),
-										rs.getDouble("depth")).toString();
-				bw.write(line);
+										rs.getDouble("depth")));
 			}
 			rs.close();
 			ps.close();
-			isSuccess = 1;
 		} catch (Exception e) {
-			isSuccess = -1;
 			throw new RuntimeException(e);
 
 		} finally {
 			if (conn != null) {
 				try {
-					bw.close();
 					conn.close();
 				} catch (Exception e) {}
 			}
-			return isSuccess;
+			return result;
 		}
 	}
 
@@ -138,6 +132,118 @@ public class JDBCHarborDAO implements HarborDAO {
 				date[i] = result.get(i);
 			}
 			return date;
+		}
+	}
+
+	public int getPrevData(String date, List<Harbor> container) {
+		String sql = "SELECT date_id, measure_date from harbor_date WHERE measure_date = " + "" +
+						"(SELECT MAX(measure_date) FROM harbor_date WHERE measure_date< ?)";
+
+		Connection conn = null;
+		int numberOfMonth = -1;
+		try {
+			conn = dataSource.getConnection();
+
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, date);
+
+			ResultSet rs = ps.executeQuery();
+			int dateId = -1;
+			String prevDate = "";
+			if (rs.next()) {
+				dateId = rs.getInt("date_id");
+				prevDate = rs.getString("measure_date");
+			}
+			rs.close();
+			ps.close();
+			if (dateId != -1) {
+				sql = "SELECT * FROM harbor_measure WHERE DATE_ID = ?";
+				ps = conn.prepareStatement(sql);
+				ps.setInt(1, dateId);
+				rs = ps.executeQuery();
+				while (rs.next()) {
+					container.add(new Harbor(rs.getDouble("longitude"),
+						rs.getDouble("latitude"),
+						rs.getDouble("depth")));
+				}
+				rs.close();
+				ps.close();
+				numberOfMonth = (Integer.parseInt(date.substring(0, 2)) - Integer.parseInt(prevDate.substring(0, 2))) * 12
+									+ Integer.parseInt(date.substring(3, 5)) - Integer.parseInt(prevDate.substring(3, 5));
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return numberOfMonth;
+		}
+	}
+
+	public List<Harbor> getPrevTrend() {
+		String sql = "SELECT * FROM harbor_trend";
+
+		List<Harbor> result= new ArrayList<Harbor>();
+		Connection conn = null;
+		try {
+			conn = dataSource.getConnection();
+
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				result.add(new Harbor(rs.getDouble("longitude"),
+					rs.getDouble("latitude"),
+					rs.getDouble("trend")));
+			}
+			rs.close();
+			ps.close();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception e) {}
+			}
+			return result;
+		}
+	}
+
+	public void insertTrend(List<Harbor> trend) {
+		String sql1 = "DELETE FROM harbor_trend";
+		String sql2 = "INSERT INTO harbor_trend " +
+			"(LONGITUDE, LATITUDE, TREND) VALUES (?, ?, ?)";
+
+		Connection conn = null;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql1);
+			ps.executeUpdate();
+			ps.close();
+
+			ps = conn.prepareStatement(sql2);
+			for (Harbor data : trend) {
+				ps.setDouble(1, data.getLongitude());
+				ps.setDouble(2, data.getLatitude());
+				ps.setDouble(3, data.getDepth());
+				ps.executeUpdate();
+			}
+			ps.close();
+
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception e) {}
+			}
 		}
 	}
 

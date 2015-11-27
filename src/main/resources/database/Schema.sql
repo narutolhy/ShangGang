@@ -26,3 +26,9 @@ CREATE TABLE `harbor_measure` (
   FOREIGN KEY(`DATE_ID`) references harbor_date(`DATE_ID`)
 );
 
+CREATE TABLE `harbor_trend` (
+  `LONGITUDE` DOUBLE NOT NULL,
+  `LATITUDE` DOUBLE NOT NULL,
+  `TREND` DOUBLE NOT NULL
+);
+

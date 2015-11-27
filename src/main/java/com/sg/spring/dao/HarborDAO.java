@@ -11,7 +11,13 @@ public interface HarborDAO {
 
 	public int insert(List<Harbor> data, String date, boolean override);
 
-	public int dump(String dir, String date);
+	public List<Harbor> dump(String date);
 
 	public String[] getAllDate();
+
+	public int getPrevData(String date, List<Harbor> container);
+
+	public List<Harbor> getPrevTrend();
+
+	public void insertTrend(List<Harbor> trend);
 }

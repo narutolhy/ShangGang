@@ -25,10 +25,15 @@ import java.util.Set;
 @RestController
 public class CustomerController {
 
+	CustomerDAO customerDAO;
+
+	public CustomerController() {
+		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
+		customerDAO = (CustomerDAO) context.getBean("customerDAO");
+
+	}
 	@RequestMapping(path = "/getuser", method = RequestMethod.GET)
 	public Customer[] getCustomer() {
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		return customerDAO.getAllUser();
 	}
@@ -41,9 +46,6 @@ public class CustomerController {
 						   @RequestParam(value = "unit") String unit,
 						   @RequestParam(value = "privilege") String rawPrivilege) {
 
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
-
 		String privilege = parsePrivilege(rawPrivilege);
 		return customerDAO.insert(new Customer(userId, password, name, phone, privilege, unit));
 	}
@@ -51,9 +53,6 @@ public class CustomerController {
 	@RequestMapping(path = "/changeprivilege", produces = "application/json", method = RequestMethod.POST)
 	public String changePrivilege(@RequestParam(value = "userId") String userId,
 							   @RequestParam(value = "privilege") String rawPrivilege) {
-
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		String privilege = parsePrivilege(rawPrivilege);
 
@@ -70,8 +69,6 @@ public class CustomerController {
 	@RequestMapping(path = "/deleteuser", method = RequestMethod.POST)
 	public int deleteCustomer(@RequestParam(value = "userId") String userId) {
 
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 		return customerDAO.delete(userId);
 	}
 
@@ -83,18 +80,12 @@ public class CustomerController {
 							  @RequestParam(value = "phone") String phone,
 							  @RequestParam(value = "unit") String unit) {
 
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
-
 		return customerDAO.changeInfo(new Customer(userId, oldPassword, name, phone, null, unit), newPassword);
 	}
 
 	@RequestMapping(path = "/login", produces = "application/json", method = RequestMethod.POST)
 	public String login(@RequestParam(value = "userId") String userId,
 					 @RequestParam(value = "password") String password) {
-
-		ApplicationContext context = new ClassPathXmlApplicationContext("Spring-Module.xml");
-		CustomerDAO customerDAO = (CustomerDAO) context.getBean("customerDAO");
 
 		Customer customer = new Customer(userId, password);
 		int isSuccess = customerDAO.login(customer);

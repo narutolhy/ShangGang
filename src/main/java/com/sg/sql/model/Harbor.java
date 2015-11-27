@@ -40,6 +40,6 @@ public class Harbor {
 
 	@Override
 	public String toString() {
-		return "" + longitude + " " + latitude + " " + depth + "\n";
+		return "" + latitude + " " + longitude + " " + depth + "\n";
 	}
 }
