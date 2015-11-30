@@ -24,7 +24,7 @@ public class Prediction {
 			List<Harbor> currTrend = calculateTrend(currDepth, prevDepth, numOfMonth);
 			List<Harbor> prevTrend = harborDAO.getPrevTrend();
 			if (prevTrend.size() != 0) {
-				merge(currTrend, prevTrend);
+				merge(currTrend, prevTrend, 1.0 / 3);
 			}
 			harborDAO.insertTrend(currTrend);
 		}
@@ -62,7 +62,7 @@ public class Prediction {
 		return trend;
 	}
 
-	private void merge(List<Harbor> currTrend, List<Harbor> prevTrend) {
+	private void merge(List<Harbor> currTrend, List<Harbor> prevTrend, double ratio) {
 		for (Harbor trend : currTrend) {
 			Harbor nearest = prevTrend.get(0);
 			for (int i = 1; i < prevTrend.size(); i++) {
@@ -70,7 +70,7 @@ public class Prediction {
 					nearest = prevTrend.get(i);
 				}
 			}
-			trend.setDepth((trend.getDepth() + nearest.getDepth()) / 2);
+			trend.setDepth(trend.getDepth() * ratio + nearest.getDepth() * (1 - ratio));
 		}
 	}
 

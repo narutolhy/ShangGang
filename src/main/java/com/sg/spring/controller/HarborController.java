@@ -71,8 +71,13 @@ public class HarborController {
 				}
 				in.close();
 				try {
-					prediction.updatePredictTable(data, name, harborDAO);
+					String[] allDates = harborDAO.getAllDate();
+					if (allDates[0].compareTo(name) <= 0) {
+						prediction.updatePredictTable(data, name, harborDAO);
+					}
+
 					return harborDAO.insert(data, name, override);
+
 				} catch (RuntimeException e) {
 					return -1;
 				}
