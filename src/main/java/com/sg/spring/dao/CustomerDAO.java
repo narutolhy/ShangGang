@@ -2,7 +2,6 @@ package com.sg.spring.dao;
 
 import com.sg.sql.model.Customer;
 
-import java.sql.Connection;
 
 /**
  * Created by qml_moon on 11/11/15.

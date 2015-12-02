@@ -15,6 +15,7 @@ CREATE TABLE `customer` (
 CREATE TABLE `harbor_date` (
   `DATE_ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `MEASURE_DATE` varchar(5) NOT NULL,
+  `HARBOR_ID` int(10) unsigned NOT NULL,
   PRIMARY KEY(`DATE_ID`)
 );
 
@@ -29,6 +30,7 @@ CREATE TABLE `harbor_measure` (
 CREATE TABLE `harbor_trend` (
   `LONGITUDE` DOUBLE NOT NULL,
   `LATITUDE` DOUBLE NOT NULL,
-  `TREND` DOUBLE NOT NULL
+  `TREND` DOUBLE NOT NULL,
+  `HARBOR_ID` int(10) unsigned NOT NULL
 );
 

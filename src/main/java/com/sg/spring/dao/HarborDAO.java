@@ -9,15 +9,15 @@ import java.util.List;
  */
 public interface HarborDAO {
 
-	public int insert(List<Harbor> data, String date, boolean override);
+	public int insert(List<Harbor> data, String date, int harborId, boolean override);
 
-	public List<Harbor> dump(String date);
+	public List<Harbor> dump(String date, int harborId);
 
-	public String[] getAllDate();
+	public String[] getAllDate(int harborId);
 
-	public int getPrevData(String date, List<Harbor> container);
+	public int getPrevData(String date, int harborId, List<Harbor> container);
 
-	public List<Harbor> getPrevTrend();
+	public List<Harbor> getPrevTrend(int harborId);
 
-	public void insertTrend(List<Harbor> trend);
+	public void insertTrend(int harborId, List<Harbor> trend);
 }

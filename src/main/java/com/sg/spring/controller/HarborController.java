@@ -50,6 +50,7 @@ public class HarborController {
 	@RequestMapping(value = "/upload", method = RequestMethod.POST)
 	public int handleFileUpload(@RequestParam("name") String name,
 								@RequestParam("file") MultipartFile file,
+								@RequestParam("harborId") int harborId,
 								@RequestParam(value = "override") boolean override){
 
 		if (!file.isEmpty()) {
@@ -71,12 +72,12 @@ public class HarborController {
 				}
 				in.close();
 				try {
-					String[] allDates = harborDAO.getAllDate();
-					if (allDates[0].compareTo(name) <= 0) {
-						prediction.updatePredictTable(data, name, harborDAO);
+					String[] allDates = harborDAO.getAllDate(harborId);
+					if (allDates.length == 0 || allDates[0].compareTo(name) <= 0) {
+						prediction.updatePredictTable(data, name, harborId, harborDAO);
 					}
 
-					return harborDAO.insert(data, name, override);
+					return harborDAO.insert(data, name, harborId, override);
 
 				} catch (RuntimeException e) {
 					return -1;
@@ -90,19 +91,21 @@ public class HarborController {
 	}
 
 	@RequestMapping(value = "/download", method = RequestMethod.POST)
-	public ResponseEntity<InputStreamResource> getFile(@RequestParam("date") String date) throws IOException{
+	public ResponseEntity<InputStreamResource> getFile(@RequestParam("date") String date,
+													   @RequestParam("harborId") int harborId,
+														@RequestParam("userId") String userId) throws IOException{
 
 		String tmpFile = System.getProperty("java.io.tmpdir") + "/" + date + ".txt";
 		String tmpZip = System.getProperty("java.io.tmpdir") + "/" + date + ".zip";
 
 		System.out.println(tmpFile);
-		List<Harbor> all = harborDAO.dump(date);
+		List<Harbor> all = harborDAO.dump(date, harborId);
 		BufferedWriter bw = new BufferedWriter(new FileWriter(tmpFile));
 		for (Harbor harbor : all) {
 			bw.write(harbor.toString());
 		}
 		bw.close();
-		ZipUtil.zipFile(tmpFile, tmpZip, date, "123456");
+		ZipUtil.zipFile(tmpFile, tmpZip, date, userId);
 
 		HttpHeaders respHeaders = new HttpHeaders();
 		respHeaders.setContentType(MediaType.parseMediaType("application/force-download"));
@@ -115,18 +118,19 @@ public class HarborController {
 
 
 	@RequestMapping(value = "/getdepthdata", method = RequestMethod.GET)
-	public double[][] getData(@RequestParam("date") String date) throws IOException{
+	public double[][] getData(@RequestParam("date") String date,
+							  @RequestParam("harborId") int harborId) throws IOException{
 
 		List<Harbor> data = new ArrayList<Harbor>();
-		String[] allDates = harborDAO.getAllDate();
+		String[] allDates = harborDAO.getAllDate(harborId);
 		for (String d: allDates) {
 			if (d.equals(date)) {
-				data = harborDAO.dump(date);
+				data = harborDAO.dump(date, harborId);
 			}
 		}
 		if (data.size() == 0 && allDates.length > 0 && date.compareTo(allDates[0]) > 0) {
-			data = harborDAO.dump(allDates[0]);
-			List<Harbor> trend = harborDAO.getPrevTrend();
+			data = harborDAO.dump(allDates[0], harborId);
+			List<Harbor> trend = harborDAO.getPrevTrend(harborId);
 			int numberOfMonth = (Integer.parseInt(date.substring(0, 2)) - Integer.parseInt(allDates[0].substring(0, 2))) * 12
 				+ Integer.parseInt(date.substring(3, 5)) - Integer.parseInt(allDates[0].substring(3, 5));
 			prediction.predict(data, trend, numberOfMonth);
@@ -143,8 +147,8 @@ public class HarborController {
 	}
 
 	@RequestMapping(value = "/getdate", method = RequestMethod.GET)
-	public String[] getDate() {
-		return harborDAO.getAllDate();
+	public String[] getDate(@RequestParam("harborId") int harborId) {
+		return harborDAO.getAllDate(harborId);
 	}
 
 

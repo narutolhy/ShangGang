@@ -1,11 +1,8 @@
 package com.sg.spring.dao;
 
-import com.sg.sql.model.Customer;
 import com.sg.sql.model.Harbor;
 
 import javax.sql.DataSource;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,14 +20,14 @@ public class JDBCHarborDAO implements HarborDAO {
 		this.dataSource = dataSource;
 	}
 
-	public int insert(List<Harbor> data, String date, boolean override) {
+	public int insert(List<Harbor> data, String date, int harborId, boolean override) {
 		String sql = "INSERT INTO harbor_measure " +
 			"(LONGITUDE, LATITUDE, DEPTH, DATE_ID) VALUES (?, ?, ?, ?)";
 		Connection conn = null;
 		int isSuccess = 0;
 		try {
 			conn = dataSource.getConnection();
-			int dateId = findFKOfDate(conn, date);
+			int dateId = findFKOfDate(conn, date, harborId);
 			if (dateId != 0) {
 				if (!override) {
 					return 0;
@@ -38,8 +35,8 @@ public class JDBCHarborDAO implements HarborDAO {
 					clear(conn, dateId);
 				}
 			} else {
-				insertDate(conn, date);
-				dateId = findFKOfDate(conn, date);
+				insertDate(conn, date, harborId);
+				dateId = findFKOfDate(conn, date, harborId);
 			}
 
 			PreparedStatement ps = conn.prepareStatement(sql);
@@ -49,8 +46,9 @@ public class JDBCHarborDAO implements HarborDAO {
 				ps.setDouble(2, harbor.getLatitude());
 				ps.setDouble(3, harbor.getDepth());
 				ps.setInt(4, dateId);
-				ps.executeUpdate();
+				ps.addBatch();
 			}
+			ps.executeBatch();
 			ps.close();
 			isSuccess = 1;
 
@@ -69,14 +67,14 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public List<Harbor> dump(String date) {
+	public List<Harbor> dump(String date, int harborId) {
 		String sql = "SELECT * FROM harbor_measure WHERE DATE_ID = ?";
 
 		List<Harbor> result= new ArrayList<Harbor>();
 		Connection conn = null;
 		try {
 			conn = dataSource.getConnection();
-			int dateId = findFKOfDate(conn, date);
+			int dateId = findFKOfDate(conn, date, harborId);
 
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, dateId);
@@ -101,14 +99,15 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public String[] getAllDate() {
-		String sql = "SELECT * FROM harbor_date ORDER BY measure_date DESC";
+	public String[] getAllDate(int harborId) {
+		String sql = "SELECT * FROM harbor_date where HARBOR_ID = ? ORDER BY measure_date DESC";
 		Connection conn = null;
 		List<String> result = new ArrayList<String>();
 		try {
 			conn = dataSource.getConnection();
 
 			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, harborId);
 
 			ResultSet rs = ps.executeQuery();
 
@@ -135,9 +134,9 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public int getPrevData(String date, List<Harbor> container) {
+	public int getPrevData(String date, int harborId, List<Harbor> container) {
 		String sql = "SELECT date_id, measure_date from harbor_date WHERE measure_date = " + "" +
-						"(SELECT MAX(measure_date) FROM harbor_date WHERE measure_date< ?)";
+						"(SELECT MAX(measure_date) FROM harbor_date WHERE harbor_id = ? AND measure_date< ?)";
 
 		Connection conn = null;
 		int numberOfMonth = -1;
@@ -145,7 +144,8 @@ public class JDBCHarborDAO implements HarborDAO {
 			conn = dataSource.getConnection();
 
 			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setString(1, date);
+			ps.setInt(1, harborId);
+			ps.setString(2, date);
 
 			ResultSet rs = ps.executeQuery();
 			int dateId = -1;
@@ -184,8 +184,8 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public List<Harbor> getPrevTrend() {
-		String sql = "SELECT * FROM harbor_trend";
+	public List<Harbor> getPrevTrend(int harborId) {
+		String sql = "SELECT * FROM harbor_trend WHERE harbor_id = ?";
 
 		List<Harbor> result= new ArrayList<Harbor>();
 		Connection conn = null;
@@ -193,6 +193,7 @@ public class JDBCHarborDAO implements HarborDAO {
 			conn = dataSource.getConnection();
 
 			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, harborId);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				result.add(new Harbor(rs.getDouble("longitude"),
@@ -214,10 +215,10 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	public void insertTrend(List<Harbor> trend) {
+	public void insertTrend(int harborId, List<Harbor> trend) {
 		String sql1 = "DELETE FROM harbor_trend";
 		String sql2 = "INSERT INTO harbor_trend " +
-			"(LONGITUDE, LATITUDE, TREND) VALUES (?, ?, ?)";
+			"(LONGITUDE, LATITUDE, TREND, HARBOR_ID) VALUES (?, ?, ?, ?)";
 
 		Connection conn = null;
 		try {
@@ -231,8 +232,11 @@ public class JDBCHarborDAO implements HarborDAO {
 				ps.setDouble(1, data.getLongitude());
 				ps.setDouble(2, data.getLatitude());
 				ps.setDouble(3, data.getDepth());
-				ps.executeUpdate();
+				ps.setInt(4, harborId);
+				ps.addBatch();
 			}
+			ps.executeBatch();
+
 			ps.close();
 
 		} catch (Exception e) {
@@ -247,11 +251,12 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
-	private int findFKOfDate(Connection conn, String date) throws SQLException {
-		String sql = "SELECT * FROM harbor_date WHERE MEASURE_DATE = ?";
+	private int findFKOfDate(Connection conn, String date, int harborId) throws SQLException {
+		String sql = "SELECT * FROM harbor_date WHERE MEASURE_DATE = ? AND HARBOR_ID = ?";
 
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, date);
+		ps.setInt(2, harborId);
 		ResultSet rs = ps.executeQuery();
 		int id = 0;
 		if (rs.next()) {
@@ -263,11 +268,12 @@ public class JDBCHarborDAO implements HarborDAO {
 
 	}
 
-	private void insertDate(Connection conn, String date) throws SQLException {
-		String sql = "INSERT INTO harbor_date(MEASURE_DATE) values (?)";
+	private void insertDate(Connection conn, String date, int harborId) throws SQLException {
+		String sql = "INSERT INTO harbor_date(MEASURE_DATE, HARBOR_ID) values (?, ?)";
 
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, date);
+		ps.setInt(2, harborId);
 		ps.executeUpdate();
 		ps.close();
 

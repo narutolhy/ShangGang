@@ -157,6 +157,7 @@ function uploadHandler(thisform, override) {
 		}
 		var fd = new FormData(thisform);
 		fd.append("name", fileName.substr(0, 5));
+		fd.append("harborId", 1);
 		fd.append("override", override);
 		$('#loading-indicator').show();
 
@@ -275,6 +276,7 @@ function downloadDialog() {
 			$.ajax({
 				url: "/getdate",
 				type: "GET",
+				data: {harborId: 1},
 				contentType: false   // tell jQuery not to set contentType
 			}).fail(function() {
 				alert("未连接到服务器!");

@@ -16,17 +16,17 @@ import java.util.List;
 public class Prediction {
 
 	@Async
-	public void updatePredictTable(List<Harbor> currDepth, String date, HarborDAO harborDAO) {
+	public void updatePredictTable(List<Harbor> currDepth, String date, int harborId,  HarborDAO harborDAO) {
 
 		List<Harbor> prevDepth = new ArrayList<Harbor>();
-		int numOfMonth = harborDAO.getPrevData(date, prevDepth);
+		int numOfMonth = harborDAO.getPrevData(date, harborId, prevDepth);
 		if (prevDepth.size() != 0 && !isDredged(currDepth, prevDepth)) {
 			List<Harbor> currTrend = calculateTrend(currDepth, prevDepth, numOfMonth);
-			List<Harbor> prevTrend = harborDAO.getPrevTrend();
+			List<Harbor> prevTrend = harborDAO.getPrevTrend(harborId);
 			if (prevTrend.size() != 0) {
 				merge(currTrend, prevTrend, 1.0 / 3);
 			}
-			harborDAO.insertTrend(currTrend);
+			harborDAO.insertTrend(harborId, currTrend);
 		}
 	}
 
