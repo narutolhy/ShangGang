@@ -64,7 +64,8 @@ public class JDBCCustomerDAO implements CustomerDAO {
 	}
 
 	public int delete(String userId) {
-		String sql = "DELETE FROM CUSTOMER WHERE USER_ID = ?";
+		String sql1 = "DELETE FROM user_depth_setting WHERE user_id = ?";
+		String sql2 = "DELETE FROM customer WHERE user_id = ?";
 		Connection conn = null;
 		//  1 : success
 		//  0 : no such user
@@ -73,7 +74,11 @@ public class JDBCCustomerDAO implements CustomerDAO {
 		try {
 			conn = dataSource.getConnection();
 			if (findByUserId(userId, conn) != null) {
-				PreparedStatement ps = conn.prepareStatement(sql);
+				PreparedStatement ps = conn.prepareStatement(sql1);
+				ps.setString(1, userId);
+				ps.executeUpdate();
+
+				ps = conn.prepareStatement(sql2);
 				ps.setString(1, userId);
 				ps.executeUpdate();
 				ps.close();
@@ -162,6 +167,34 @@ public class JDBCCustomerDAO implements CustomerDAO {
 		}
 	}
 
+	public int setWarningStatus(Customer customer, String status) {
+		String sql = "UPDATE CUSTOMER SET WARNING_STATUS = ? WHERE USER_ID = ?";
+		Connection conn = null;
+		//  1 : success
+		// -1 : database is down
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, status);
+			ps.setString(2, customer.getUserId());
+			ps.executeUpdate();
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
+		}
+	}
+
 	public int login(Customer customer) {
 		String sql = "UPDATE CUSTOMER SET LAST_ONLINE = ? WHERE USER_ID = ?";
 		Connection conn = null;
@@ -184,6 +217,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				customer.setPrivilege(data.getPrivilege());
 				customer.setUnit(data.getUnit());
 				customer.setPassword("");
+				customer.setWarningStatus(data.getWarningStatus());
 			} else {
 				isSuccess = 0;
 			}
@@ -211,15 +245,18 @@ public class JDBCCustomerDAO implements CustomerDAO {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				result.add(new Customer(
-					rs.getString("USER_ID"),
-					"",
-					rs.getString("NAME"),
-					rs.getString("PHONE"),
-					rs.getString("PRIVILEGE"),
-					rs.getString("UNIT"),
-					rs.getString("LAST_ONLINE")
-				));
+				//return all users except admin without password field.
+				if (!rs.getString("USER_ID").equals("admin")) {
+					result.add(new Customer(
+						rs.getString("USER_ID"),
+						"",
+						rs.getString("NAME"),
+						rs.getString("PHONE"),
+						rs.getString("PRIVILEGE"),
+						rs.getString("UNIT"),
+						rs.getString("LAST_ONLINE")
+					));
+				}
 			}
 			rs.close();
 			ps.close();
@@ -236,6 +273,166 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				customers[i] = result.get(i);
 			}
 			return customers;
+		}
+	}
+
+	public double[] getDepthLevel(Customer customer, int harborId) {
+		double[] result = new double[0];
+		Connection conn = null;
+		try {
+			conn = dataSource.getConnection();
+			String sql = "SELECT * FROM user_depth_setting WHERE user_id = ? AND harbor_id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, customer.getUserId());
+			ps.setInt(2, harborId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				String[] splits = rs.getString("depth_level").split(",");
+				result = new double[splits.length];
+				for (int i = 0; i < splits.length; i++) {
+					result[i] = Double.parseDouble(splits[i]);
+				}
+			}
+
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+
+			return result;
+		}
+	}
+
+
+
+	public int setDepthLevel(Customer customer, int harborId, String depthLevel) {
+		String sql1 = "SELECT * from user_depth_setting WHERE user_id = ? AND harbor_id = ?";
+		String sql2 = "UPDATE user_depth_setting SET depth_level = ? WHERE user_id = ? AND harbor_id = ?";
+		String sql3 = "INSERT into user_depth_setting(user_id, harbor_id, depth_level) values(?, ?, ?)";
+		Connection conn = null;
+		//  1 : success
+		// -1 : database is down
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql1);
+			ps.setString(1, customer.getUserId());
+			ps.setInt(2, harborId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				ps = conn.prepareStatement(sql2);
+				ps.setString(1, depthLevel);
+				ps.setString(2, customer.getUserId());
+				ps.setInt(3, harborId);
+				ps.executeUpdate();
+			} else {
+				ps = conn.prepareStatement(sql3);
+				ps.setString(1, customer.getUserId());
+				ps.setInt(2, harborId);
+				ps.setString(3, depthLevel);
+				ps.executeUpdate();
+			}
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
+		}
+	}
+
+	public int getWarning(Customer customer, int harborId) {
+		String sql = "SELECT * from user_warning_setting WHERE user_id = ? AND harbor_id = ?";
+		Connection conn = null;
+		//  1 : success
+		// -1 : database is down
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, customer.getUserId());
+			ps.setInt(2, harborId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				customer.setRedWarning(rs.getObject("RED_WARNING") == null ? -100 : rs.getDouble("RED_WARNING"));
+				customer.setYellowWarning(rs.getObject("YELLOW_WARNING") == null ? -100 : rs.getDouble("YELLOW_WARNING"));
+				customer.setBlueWarning(rs.getObject("BLUE_WARNING") == null ? -100 : rs.getDouble("BLUE_WARNING"));
+			} else {
+				customer.setRedWarning(-100);
+				customer.setYellowWarning(-100);
+				customer.setBlueWarning(-100);
+			}
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
+		}
+	}
+
+	public int setWarning(Customer customer, int harborId) {
+		String sql1 = "SELECT * from user_warning_setting WHERE user_id = ? AND harbor_id = ?";
+		String sql2 = "UPDATE user_warning_setting SET red_warning = ?, yellow_warning = ?, blue_warning = ? WHERE user_id = ? AND harbor_id = ?";
+		String sql3 = "INSERT into user_warning_setting(user_id, harbor_id, red_warning, yellow_warning, blue_warning) values(?, ?, ?, ?, ?)";
+		Connection conn = null;
+		//  1 : success
+		// -1 : database is down
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql1);
+			ps.setString(1, customer.getUserId());
+			ps.setInt(2, harborId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				ps = conn.prepareStatement(sql2);
+				ps.setObject(1, customer.getRedWarning() > -50 ? customer.getRedWarning() : null);
+				ps.setObject(2, customer.getYellowWarning() > -50 ? customer.getYellowWarning() : null);
+				ps.setObject(3, customer.getBlueWarning() > -50 ? customer.getBlueWarning() : null);
+				ps.setString(4, customer.getUserId());
+				ps.setInt(5, harborId);
+				ps.executeUpdate();
+			} else {
+				ps = conn.prepareStatement(sql3);
+				ps.setString(1, customer.getUserId());
+				ps.setInt(2, harborId);
+				ps.setObject(3, customer.getRedWarning() > -50 ? customer.getRedWarning() : null);
+				ps.setObject(4, customer.getYellowWarning() > -50 ? customer.getYellowWarning() : null);
+				ps.setObject(5, customer.getBlueWarning() > -50 ? customer.getBlueWarning() : null);
+				ps.executeUpdate();
+			}
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
 		}
 	}
 
@@ -257,11 +454,13 @@ public class JDBCCustomerDAO implements CustomerDAO {
 					rs.getString("PRIVILEGE"),
 					rs.getString("UNIT")
 				);
+				customer.setWarningStatus(rs.getString("WARNING_STATUS"));
 			}
 			rs.close();
 			ps.close();
 			return customer;
 		} catch (SQLException e) {
+			System.out.println(e.getMessage());
 			throw new RuntimeException(e);
 		}
 	}

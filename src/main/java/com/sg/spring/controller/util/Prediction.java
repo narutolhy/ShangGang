@@ -16,11 +16,11 @@ import java.util.List;
 public class Prediction {
 
 	@Async
-	public void updatePredictTable(List<Harbor> currDepth, String date, int harborId,  HarborDAO harborDAO) {
+	public void updatePredictTable(List<Harbor> currDepth, String date, int harborId, boolean dreged, HarborDAO harborDAO) {
 
 		List<Harbor> prevDepth = new ArrayList<Harbor>();
 		int numOfMonth = harborDAO.getPrevData(date, harborId, prevDepth);
-		if (prevDepth.size() != 0 && !isDredged(currDepth, prevDepth)) {
+		if (prevDepth.size() != 0 && !dreged) {
 			List<Harbor> currTrend = calculateTrend(currDepth, prevDepth, numOfMonth);
 			List<Harbor> prevTrend = harborDAO.getPrevTrend(harborId);
 			if (prevTrend.size() != 0) {
@@ -40,11 +40,6 @@ public class Prediction {
 			}
 			depth.setDepth(depth.getDepth() + nearest.getDepth() * numOfMonths);
 		}
-	}
-
-	private boolean isDredged(List<Harbor> curr, List<Harbor> prev) {
-		//TODO
-		return false;
 	}
 
 	private List<Harbor> calculateTrend(List<Harbor> currDepth, List<Harbor> prevDepth, int numOfMonth) {

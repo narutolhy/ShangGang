@@ -77,7 +77,7 @@ public class CustomerController {
 		return customerDAO.changeInfo(new Customer(userId, oldPassword, name, phone, null, unit), newPassword);
 	}
 
-	@RequestMapping(path = "/login", produces = "application/json", method = RequestMethod.POST)
+	@RequestMapping(path = "/login", produces = "application/json", method = RequestMethod.GET)
 	public String login(@RequestParam(value = "userId") String userId,
 					 @RequestParam(value = "password") String password) {
 
@@ -92,12 +92,74 @@ public class CustomerController {
 			js.put("phone", customer.getPhone());
 			js.put("unit", customer.getUnit());
 			js.put("userId", customer.getUserId());
+			if (customer.getWarningStatus() != null) {
+				js.put("warningStatus", customer.getWarningStatus());
+			} else {
+				js.put("warningStatus", "ggggg");
+			}
 		}
 		return js.toString();
 
 	}
 
+	@RequestMapping(path = "/getdepthlevel", method = RequestMethod.GET)
+	public double[] getDepthLevel(@RequestParam(value = "userId") String userId,
+								  @RequestParam(value = "harborId") int harborId) {
+		Customer customer = new Customer(userId);
+		return customerDAO.getDepthLevel(customer, harborId);
+	}
 
+	@RequestMapping(path = "/setdepthlevel", method = RequestMethod.POST)
+	public int setDepthLevel(@RequestParam(value = "userId") String userId,
+							 @RequestParam(value = "harborId") int harborId,
+							 @RequestParam(value = "depthLevel") String depthLevel) {
+		return customerDAO.setDepthLevel(new Customer(userId), harborId, depthLevel);
+	}
+
+	@RequestMapping(path = "/setwarningstatus", method = RequestMethod.POST)
+	public int setWarningStatus(@RequestParam(value = "userId") String userId,
+							 @RequestParam(value = "warningStatus") String status) {
+		return customerDAO.setWarningStatus(new Customer(userId), status);
+	}
+
+	@RequestMapping(path = "/getwarninglevel", produces = "application/json", method = RequestMethod.GET)
+	public String getWarningLevel(@RequestParam(value = "userId") String userId,
+								  @RequestParam(value = "harborId") int harborId) {
+		Customer customer = new Customer(userId);
+		int isSuccess = customerDAO.getWarning(customer, harborId);
+		JSONObject js = new JSONObject();
+		if (isSuccess == 1) {
+			js.put("redWarning", customer.getRedWarning() > -50 ? customer.getRedWarning() : "");
+			js.put("yellowWarning", customer.getYellowWarning() > -50 ? customer.getYellowWarning() : "");
+			js.put("blueWarning", customer.getBlueWarning() > -50 ? customer.getBlueWarning() : "");
+		}
+		return js.toString();
+	}
+
+	@RequestMapping(path = "/setwarninglevel", method = RequestMethod.POST)
+	public int setWarningLevel(@RequestParam(value = "userId") String userId,
+							   @RequestParam(value = "harborId") int harborId,
+							   @RequestParam(value = "redWarning") String red,
+							   @RequestParam(value = "yellowWarning") String yellow,
+							   @RequestParam(value = "blueWarning") String blue) {
+		Customer c = new Customer(userId);
+		if (!red.equals("")) {
+			c.setRedWarning(Double.parseDouble(red));
+		} else {
+			c.setRedWarning(-100);
+		}
+		if (!yellow.equals("")) {
+			c.setYellowWarning(Double.parseDouble(yellow));
+		} else {
+			c.setYellowWarning(-100);
+		}
+		if (!blue.equals("")) {
+			c.setBlueWarning(Double.parseDouble(blue));
+		} else {
+			c.setBlueWarning(-100);
+		}
+		return customerDAO.setWarning(c, harborId);
+	}
 
 	private String parsePrivilege(String rawPrivilege) {
 		Set<String> ps = new HashSet<String>();
@@ -106,8 +168,8 @@ public class CustomerController {
 			ps.add(split);
 		}
 		String privilege = "";
-		for (int i = 1; i <= 4; i++) {
-			for (int j = 1; j <= 6; j++) {
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 6; j++) {
 				if (ps.contains("" + i + j)) {
 					privilege += "Y";
 				} else {

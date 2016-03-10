@@ -1,5 +1,6 @@
 CREATE DATABASE `shanggang` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE shanggang;
+
 CREATE TABLE `customer` (
   `CUST_ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `NAME` varchar(100) NOT NULL,
@@ -9,8 +10,23 @@ CREATE TABLE `customer` (
   `UNIT` varchar(40),
   `LAST_ONLINE` DATE,
   `PHONE` varchar(20),
+  `WARNING_STATUS` varchar(20),
   PRIMARY KEY (`CUST_ID`)
 ) DEFAULT CHARSET=utf8;
+
+CREATE TABLE `user_depth_setting` (
+  `USER_ID` VARCHAR(20) NOT NULL,
+  `HARBOR_ID` int(10) unsigned NOT NULL,
+  `DEPTH_LEVEL` varchar(100)
+);
+
+CREATE TABLE `user_warning_setting` (
+  `USER_ID` VARCHAR(20) NOT NULL,
+  `HARBOR_ID` int(10) unsigned NOT NULL,
+  `RED_WARNING` double,
+  `YELLOW_WARNING` double,
+  `BLUE_WARNING` double
+);
 
 CREATE TABLE `harbor_date` (
   `DATE_ID` int(10) unsigned NOT NULL AUTO_INCREMENT,

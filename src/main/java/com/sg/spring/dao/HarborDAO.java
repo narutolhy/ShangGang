@@ -13,6 +13,8 @@ public interface HarborDAO {
 
 	public List<Harbor> dump(String date, int harborId);
 
+	public int delete(String date, int harborId);
+
 	public String[] getAllDate(int harborId);
 
 	public int getPrevData(String date, int harborId, List<Harbor> container);

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+</head>
+
+<form onsubmit="return false;">
+	<input type="hidden" name="data" id="file_base64">
+	<input type="file" id="fileup">
+	<input type="submit" value="submit" onclick="$.post('/encryptedupload', $(this).parent().serialize());">
+</form>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="AES.js"></script>
+
+<script>
+	$(document).ready(function(){
+
+		var test = new AES.Crypto('sjtucit');
+		$("#fileup").change(function(){
+			var v = $(this).val();
+			var reader = new FileReader();
+			reader.readAsText(this.files[0]);
+			reader.onload = function(e){
+				$('#file_base64').val(test.encrypt(e.target.result));
+			};
+		});
+	});
+</script>
+</html>

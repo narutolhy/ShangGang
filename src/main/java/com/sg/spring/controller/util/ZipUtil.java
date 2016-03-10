@@ -18,7 +18,7 @@ public class ZipUtil {
 		File zipFile = new File(destPath);
 		AESEncrypterBC bc = new AESEncrypterBC();
 		AesZipFileEncrypter azfe = new AesZipFileEncrypter(zipFile, bc);
-		azfe.add(file, "/" + name + ".txt", passWord);
+		azfe.add(file, name, passWord);
 		azfe.close();
 	}
 

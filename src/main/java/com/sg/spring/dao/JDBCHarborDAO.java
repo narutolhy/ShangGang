@@ -67,6 +67,40 @@ public class JDBCHarborDAO implements HarborDAO {
 		}
 	}
 
+	public int delete(String date, int harborId) {
+		String sql1 = "DELETE FROM harbor_measure WHERE date_id=?";
+		String sql2 = "DELETE FROM harbor_date WHERE date_id=?";
+		Connection conn = null;
+		int isSuccess = 0;
+		try {
+			conn = dataSource.getConnection();
+			int dateId = findFKOfDate(conn, date, harborId);
+			if (dateId == 0) {
+				return 0;
+			}
+			PreparedStatement ps = conn.prepareStatement(sql1);
+			ps.setInt(1, dateId);
+			ps.execute();
+
+			ps = conn.prepareStatement(sql2);
+			ps.setInt(1, dateId);
+			ps.execute();
+
+			ps.close();
+			isSuccess = 1;
+		} catch (SQLException e) {
+			isSuccess = -1;
+			throw new RuntimeException(e);
+		} finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (SQLException e) {}
+			}
+			return isSuccess;
+		}
+	}
+
 	public List<Harbor> dump(String date, int harborId) {
 		String sql = "SELECT * FROM harbor_measure WHERE DATE_ID = ?";
 
@@ -216,7 +250,7 @@ public class JDBCHarborDAO implements HarborDAO {
 	}
 
 	public void insertTrend(int harborId, List<Harbor> trend) {
-		String sql1 = "DELETE FROM harbor_trend";
+		String sql1 = "DELETE FROM harbor_trend where HARBOR_ID = ?";
 		String sql2 = "INSERT INTO harbor_trend " +
 			"(LONGITUDE, LATITUDE, TREND, HARBOR_ID) VALUES (?, ?, ?, ?)";
 
@@ -224,6 +258,7 @@ public class JDBCHarborDAO implements HarborDAO {
 		try {
 			conn = dataSource.getConnection();
 			PreparedStatement ps = conn.prepareStatement(sql1);
+			ps.setInt(1, harborId);
 			ps.executeUpdate();
 			ps.close();
 

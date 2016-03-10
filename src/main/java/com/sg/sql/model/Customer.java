@@ -13,6 +13,11 @@ public class Customer {
 	private String lastOnline;
 	private String unit;
 
+	private double redWarning;
+	private double yellowWarning;
+	private double blueWarning;
+	private String warningStatus;
+
 	public Customer(String id, String password, String name, String phone, String privilege, String unit, String lastOnline) {
 		this.userId = id;
 		this.name = name;
@@ -64,6 +69,22 @@ public class Customer {
 		return unit;
 	}
 
+	public double getRedWarning() {
+		return redWarning;
+	}
+
+	public double getYellowWarning() {
+		return yellowWarning;
+	}
+
+	public double getBlueWarning() {
+		return blueWarning;
+	}
+
+	public String getWarningStatus() {
+		return warningStatus;
+	}
+
 	public void setPhone(String phone) {
 		this.phone = phone;
 	}
@@ -82,5 +103,21 @@ public class Customer {
 
 	public void setUnit(String unit) {
 		this.unit = unit;
+	}
+
+	public void setRedWarning(double red) {
+		this.redWarning = red;
+	}
+
+	public void setYellowWarning(double yellow) {
+		this.yellowWarning = yellow;
+	}
+
+	public void setBlueWarning(double blue) {
+		this.blueWarning = blue;
+	}
+
+	public void setWarningStatus(String status) {
+		this.warningStatus = status;
 	}
 }

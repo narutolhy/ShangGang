@@ -17,6 +17,16 @@ public interface CustomerDAO {
 
 	public int login(Customer customer);
 
+	public double[] getDepthLevel(Customer customer, int harborId);
+
+	public int setDepthLevel(Customer customer, int harborId, String depthLevel);
+
 	public Customer[] getAllUser();
+
+	public int getWarning(Customer customer, int harborId);
+
+	public int setWarning(Customer customer, int harborId);
+
+	public int setWarningStatus(Customer customer, String status);
 
 }
