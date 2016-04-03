@@ -131,7 +131,8 @@ public class CustomerController {
 		if (isSuccess == 1) {
 			js.put("redWarning", customer.getRedWarning() > -50 ? customer.getRedWarning() : "");
 			js.put("yellowWarning", customer.getYellowWarning() > -50 ? customer.getYellowWarning() : "");
-			js.put("blueWarning", customer.getBlueWarning() > -50 ? customer.getBlueWarning() : "");
+			js.put("redWarning2", customer.getRedWarning2() > -50 ? customer.getRedWarning2() : "");
+			js.put("yellowWarning2", customer.getYellowWarning2() > -50 ? customer.getYellowWarning2() : "");
 		}
 		return js.toString();
 	}
@@ -141,7 +142,8 @@ public class CustomerController {
 							   @RequestParam(value = "harborId") int harborId,
 							   @RequestParam(value = "redWarning") String red,
 							   @RequestParam(value = "yellowWarning") String yellow,
-							   @RequestParam(value = "blueWarning") String blue) {
+							   @RequestParam(value = "redWarning2") String red2,
+							   @RequestParam(value = "yellowWarning2") String yellow2) {
 		Customer c = new Customer(userId);
 		if (!red.equals("")) {
 			c.setRedWarning(Double.parseDouble(red));
@@ -153,11 +155,17 @@ public class CustomerController {
 		} else {
 			c.setYellowWarning(-100);
 		}
-		if (!blue.equals("")) {
-			c.setBlueWarning(Double.parseDouble(blue));
+		if (!red2.equals("")) {
+			c.setRedWarning2(Double.parseDouble(red2));
 		} else {
-			c.setBlueWarning(-100);
+			c.setRedWarning2(-100);
 		}
+		if (!yellow2.equals("")) {
+			c.setYellowWarning2(Double.parseDouble(yellow2));
+		} else {
+			c.setYellowWarning2(-100);
+		}
+
 		return customerDAO.setWarning(c, harborId);
 	}
 

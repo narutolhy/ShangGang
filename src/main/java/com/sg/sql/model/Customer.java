@@ -15,7 +15,8 @@ public class Customer {
 
 	private double redWarning;
 	private double yellowWarning;
-	private double blueWarning;
+	private double redWarning2;
+	private double yellowWarning2;
 	private String warningStatus;
 
 	public Customer(String id, String password, String name, String phone, String privilege, String unit, String lastOnline) {
@@ -77,8 +78,12 @@ public class Customer {
 		return yellowWarning;
 	}
 
-	public double getBlueWarning() {
-		return blueWarning;
+	public double getRedWarning2() {
+		return redWarning2;
+	}
+
+	public double getYellowWarning2() {
+		return yellowWarning2;
 	}
 
 	public String getWarningStatus() {
@@ -113,9 +118,14 @@ public class Customer {
 		this.yellowWarning = yellow;
 	}
 
-	public void setBlueWarning(double blue) {
-		this.blueWarning = blue;
+	public void setRedWarning2(double red) {
+		this.redWarning2 = red;
 	}
+
+	public void setYellowWarning2(double yellow) {
+		this.yellowWarning2 = yellow;
+	}
+
 
 	public void setWarningStatus(String status) {
 		this.warningStatus = status;

@@ -254,7 +254,7 @@ public class JDBCCustomerDAO implements CustomerDAO {
 						rs.getString("PHONE"),
 						rs.getString("PRIVILEGE"),
 						rs.getString("UNIT"),
-						rs.getString("LAST_ONLINE")
+						rs.getString("s")
 					));
 				}
 			}
@@ -367,11 +367,14 @@ public class JDBCCustomerDAO implements CustomerDAO {
 			if (rs.next()) {
 				customer.setRedWarning(rs.getObject("RED_WARNING") == null ? -100 : rs.getDouble("RED_WARNING"));
 				customer.setYellowWarning(rs.getObject("YELLOW_WARNING") == null ? -100 : rs.getDouble("YELLOW_WARNING"));
-				customer.setBlueWarning(rs.getObject("BLUE_WARNING") == null ? -100 : rs.getDouble("BLUE_WARNING"));
+				customer.setRedWarning2(rs.getObject("RED_WARNING2") == null ? -100 : rs.getDouble("RED_WARNING2"));
+				customer.setYellowWarning2(rs.getObject("YELLOW_WARNING2") == null ? -100 : rs.getDouble("YELLOW_WARNING2"));
 			} else {
 				customer.setRedWarning(-100);
 				customer.setYellowWarning(-100);
-				customer.setBlueWarning(-100);
+				customer.setRedWarning2(-100);
+				customer.setYellowWarning2(-100);
+
 			}
 			ps.close();
 			isSuccess = 1;
@@ -391,8 +394,8 @@ public class JDBCCustomerDAO implements CustomerDAO {
 
 	public int setWarning(Customer customer, int harborId) {
 		String sql1 = "SELECT * from user_warning_setting WHERE user_id = ? AND harbor_id = ?";
-		String sql2 = "UPDATE user_warning_setting SET red_warning = ?, yellow_warning = ?, blue_warning = ? WHERE user_id = ? AND harbor_id = ?";
-		String sql3 = "INSERT into user_warning_setting(user_id, harbor_id, red_warning, yellow_warning, blue_warning) values(?, ?, ?, ?, ?)";
+		String sql2 = "UPDATE user_warning_setting SET red_warning = ?, yellow_warning = ?, red_warning2 = ?, yellow_warning2 = ? WHERE user_id = ? AND harbor_id = ?";
+		String sql3 = "INSERT into user_warning_setting(user_id, harbor_id, red_warning, yellow_warning, red_warning2, yellow_warning2) values(?, ?, ?, ?, ?, ?)";
 		Connection conn = null;
 		//  1 : success
 		// -1 : database is down
@@ -407,9 +410,10 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				ps = conn.prepareStatement(sql2);
 				ps.setObject(1, customer.getRedWarning() > -50 ? customer.getRedWarning() : null);
 				ps.setObject(2, customer.getYellowWarning() > -50 ? customer.getYellowWarning() : null);
-				ps.setObject(3, customer.getBlueWarning() > -50 ? customer.getBlueWarning() : null);
-				ps.setString(4, customer.getUserId());
-				ps.setInt(5, harborId);
+				ps.setObject(3, customer.getRedWarning2() > -50 ? customer.getRedWarning2() : null);
+				ps.setObject(4, customer.getYellowWarning2() > -50 ? customer.getYellowWarning2() : null);
+				ps.setString(5, customer.getUserId());
+				ps.setInt(6, harborId);
 				ps.executeUpdate();
 			} else {
 				ps = conn.prepareStatement(sql3);
@@ -417,7 +421,8 @@ public class JDBCCustomerDAO implements CustomerDAO {
 				ps.setInt(2, harborId);
 				ps.setObject(3, customer.getRedWarning() > -50 ? customer.getRedWarning() : null);
 				ps.setObject(4, customer.getYellowWarning() > -50 ? customer.getYellowWarning() : null);
-				ps.setObject(5, customer.getBlueWarning() > -50 ? customer.getBlueWarning() : null);
+				ps.setObject(5, customer.getRedWarning2() > -50 ? customer.getRedWarning2() : null);
+				ps.setObject(6, customer.getYellowWarning2() > -50 ? customer.getYellowWarning2() : null);
 				ps.executeUpdate();
 			}
 			ps.close();

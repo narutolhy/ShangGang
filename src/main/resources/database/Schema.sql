@@ -25,7 +25,8 @@ CREATE TABLE `user_warning_setting` (
   `HARBOR_ID` int(10) unsigned NOT NULL,
   `RED_WARNING` double,
   `YELLOW_WARNING` double,
-  `BLUE_WARNING` double
+  `RED_WARNING2` double,
+  `YELLOW_WARNING2` double
 );
 
 CREATE TABLE `harbor_date` (
@@ -50,3 +51,5 @@ CREATE TABLE `harbor_trend` (
   `HARBOR_ID` int(10) unsigned NOT NULL
 );
 
+CREATE INDEX HARBOR_INDEX ON harbor_measure (DATE_ID);
+INSERT INTO customer VALUES (2, 'sjtucit', 'admin', '8cb2237d0679ca88db6464eac60da96345513964', 'admin', NULL, '2016-01-19', NULL, 'ggggg');

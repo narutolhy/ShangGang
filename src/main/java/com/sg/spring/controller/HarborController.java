@@ -241,7 +241,7 @@ public class HarborController {
 	public int backup(@RequestParam("deviceId") int deviceId) {
 		Runtime r = Runtime.getRuntime();
 		try {
-			Process p = r.exec("cmd /C mysqldump -u qmlmoon shanggang > D:\\backup\\backup.sql");
+			Process p = r.exec("cmd /C mysqldump -u shanggang -pshanggang shanggang > F:\\backup\\backup.sql");
 			if (p.waitFor() == 0) {
 				return 1;
 			} else {
